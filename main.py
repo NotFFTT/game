@@ -11,12 +11,18 @@ HEADER = 64
 SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
- 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDRESS)
 # player_name = input("Enter your name > ")
 
 # print(client.recv(1024).decode())
+
+SKINS = {
+        '1': ":resources:images/animated_characters/zombie/zombie_idle.png",
+        '2': ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png",
+        '3': ":resources:images/animated_characters/male_adventurer/maleAdventurer_idle.png",
+        '4': ":resources:images/animated_characters/robot/robot_idle.png",
+}
 
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
@@ -27,7 +33,11 @@ class Game(arcade.Window):
         self.physics_engine = None
 
     def setup(self):
-        self.player = arcade.Sprite(":resources:images/animated_characters/zombie/zombie_idle.png")
+        self.send('!SETUP')
+        player_number = client.recv(2048).decode(FORMAT)
+        player_texture = SKINS[player_number]
+        
+        self.player = arcade.Sprite(player_texture)
         self.player.center_x = 500
         self.player.center_y = 500
         
@@ -66,7 +76,7 @@ class Game(arcade.Window):
         self.player.update()
 
         self.send(f"{self.player.center_x} {self.player.center_y}")
-
+        
         # receive player2 location through socket
         received_list = client.recv(2048).decode(FORMAT)
         print(received_list)
