@@ -31,6 +31,9 @@ class Game(arcade.Window):
         self.player.center_x = 500
         self.player.center_y = 500
         
+        self.player2 = arcade.Sprite(":resources:images/animated_characters/robot/robot_idle.png")
+        self.player2.center_x = 700
+        self.player2.center_y = 500
 
     def on_key_press(self, symbol: int, modifiers: int):
 
@@ -57,11 +60,22 @@ class Game(arcade.Window):
     def on_draw(self):
         self.clear()
         self.player.draw()
+        self.player2.draw()
 
     def on_update(self, delta_time):
         self.player.update()
-        self.send(f"{self.player.center_x}, {self.player.center_y}")
-        ## send player position to server/socket.
+
+        self.send(f"{self.player.center_x} {self.player.center_y}")
+
+        # receive player2 location through socket
+        received_list = client.recv(2048).decode(FORMAT)
+        print(received_list)
+        received_list = received_list.split(" ")
+        
+        # update self.player2.center_x = whatever comes from socket
+        self.player2.center_x = float(received_list[0])
+        self.player2.center_y = float(received_list[1])
+        self.player2.update()
         
     def send(self, msg):
         message = msg.encode(FORMAT)
@@ -70,6 +84,7 @@ class Game(arcade.Window):
         send_length += b' ' * (HEADER - len(send_length))
         client.send(send_length)
         client.send(message)
+
        
 def main():
     window = Game()

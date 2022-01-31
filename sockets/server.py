@@ -12,26 +12,31 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server.bind(ADDRESS)
 
-player_1_x_y = None
-player_2_x_y = None
+player_1_x_y = '700 700'
+player_2_x_y = '700 700'
 
 def handle_client(connection, address, player_name):
     connected = True
+    global player_2_x_y
+    global player_1_x_y
     
     while connected:
         message_length = connection.recv(HEADER).decode(FORMAT)
-        print('Message length: ', message_length)
+
         if message_length:
             msg_len = int(message_length)
             msg = connection.recv(msg_len).decode(FORMAT)
             
             if player_name == 1:
                 player_1_x_y = msg
-                print('PLAYER ONE', player_1_x_y)
+                connection.send(player_2_x_y.encode(FORMAT))
+                print(player_2_x_y.encode(FORMAT))
 
             else:
                 player_2_x_y = msg
-                print('PLAYER TWO', player_2_x_y)
+                connection.send(player_1_x_y.encode(FORMAT))
+                print(player_1_x_y.encode(FORMAT))
+
 
     connection.close()
 
