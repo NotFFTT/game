@@ -29,13 +29,13 @@ class Game(arcade.Window):
         super().__init__(width, height, title)
         arcade.set_background_color(arcade.csscolor.BLUE)
         self.player = None
-        
+        self.player_number = None
         self.physics_engine = None
 
     def setup(self):
         self.send('!SETUP')
-        player_number = client.recv(2048).decode(FORMAT)
-        player_texture = SKINS[player_number]
+        self.player_number = client.recv(2048).decode(FORMAT)
+        player_texture = SKINS[self.player_number]
         
         self.player = arcade.Sprite(player_texture)
         self.player.center_x = 500
@@ -75,7 +75,7 @@ class Game(arcade.Window):
     def on_update(self, delta_time):
         self.player.update()
 
-        self.send(f"{self.player.center_x} {self.player.center_y}")
+        self.send(f"{self.player.center_x} {self.player.center_y} {self.player_number}")
         
         # receive player2 location through socket
         received_list = client.recv(2048).decode(FORMAT)
@@ -85,6 +85,7 @@ class Game(arcade.Window):
         # update self.player2.center_x = whatever comes from socket
         self.player2.center_x = float(received_list[0])
         self.player2.center_y = float(received_list[1])
+        self.player2.texture = arcade.load_texture(SKINS[received_list[2]])
         self.player2.update()
         
     def send(self, msg):

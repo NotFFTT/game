@@ -14,8 +14,8 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server.bind(ADDRESS)
 
-player_1_x_y = '700 700'
-player_2_x_y = '700 700'
+player_1_x_y = '700 700 1'
+player_2_x_y = '700 700 2'
 
 def handle_client(connection, address, player_name):
     connected = True
