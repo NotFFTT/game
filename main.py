@@ -2,6 +2,7 @@ import re
 import arcade
 import socket
 import pickle
+# from pyglet.gl.gl import GL_NEAREST # TODO: Uncomment when ready to add custom tilemap.
 
 # Constants
 SCREEN_WIDTH = 1000
@@ -19,14 +20,6 @@ FORMAT = 'utf-8'
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDRESS)
 
-
-# SKINS = {
-#         '1': ":resources:images/animated_characters/zombie/zombie_idle.png",
-#         '2': ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png",
-#         '3': ":resources:images/animated_characters/male_adventurer/maleAdventurer_idle.png",
-#         '4': ":resources:images/animated_characters/robot/robot_idle.png",
-# }
-
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
         super().__init__(width, height, title)
@@ -36,6 +29,7 @@ class Game(arcade.Window):
         self.physics_engine = None
         self.skins = None
         self.other_players_list = None
+        self.tile_map = None
 
     def setup(self):
 
@@ -45,14 +39,10 @@ class Game(arcade.Window):
             '2': arcade.load_texture(":resources:images/animated_characters/male_adventurer/maleAdventurer_idle.png"),
             '3': arcade.load_texture(":resources:images/animated_characters/robot/robot_idle.png"),
         }
-        # paths = [":resources:images/animated_characters/zombie/zombie_idle.png", ":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png", ":resources:images/animated_characters/male_adventurer/maleAdventurer_idle.png", ":resources:images/animated_characters/robot/robot_idle.png"]
-        # for index, path in enumerate(paths):
-        #     self.skins[str(index + 1)] = arcade.load_texture(path)
-
 
         self.send('SETUP')
         self.player_number = pickle.loads(client.recv(2048))
-        print(self.player_number)
+        self.title = f"Player number: {self.player_number}"
         
         self.player = arcade.Sprite(":resources:images/animated_characters/zombie/zombie_idle.png") # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
         self.player.texture = self.skins[self.player_number]
@@ -60,10 +50,11 @@ class Game(arcade.Window):
         self.player.center_y = 500
 
         self.other_players_list = arcade.SpriteList()
-        
-        # self.player2 = arcade.Sprite(":resources:images/animated_characters/robot/robot_idle.png")
-        # self.player2.center_x = 700
-        # self.player2.center_y = 500
+
+        # TODO: Uncomment when ready to add custom tilemap.
+        # self.tile_map = arcade.load_tilemap("assets/map/map2.json", scaling=1, use_spatial_hash=True)
+        # self.scene = arcade.Scene.from_tilemap(self.tile_map)
+    
 
     def on_key_press(self, symbol: int, modifiers: int):
 
@@ -94,14 +85,15 @@ class Game(arcade.Window):
         self.clear()
         self.player.draw()
         self.other_players_list.draw()
+        # self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
 
     def on_update(self, delta_time):
         self.player.update()
 
-        self.send(f"{self.player.center_x} {self.player.center_y} {self.player_number}")
+        self.send(f"{self.player.center_x} {self.player.center_y} {self.player_number}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
         
         # receive player2 location through socket
-        received_list = pickle.loads(client.recv(2048))
+        received_list = pickle.loads(client.recv(2048)) # TODO: instead of updating received_list in on_update, move it to a separate thread / not even part of Game(arcade.window). TODO: change server to consistently publish received_list on its own interval timer, not trigger by incoming messages. TODO: separate publish channel for chat?
         # ['0 0 0', '0 0 0']
         
         # update self.player2.center_x = whatever comes from socket
@@ -109,7 +101,6 @@ class Game(arcade.Window):
         while len(self.other_players_list) - len(received_list) and len(received_list) - len(self.other_players_list) > 0:
             print("while loop")
             self.other_players_list.append(arcade.Sprite())
-
 
         # loop through the other_players_list and update their values to client.recv
         index = 0
