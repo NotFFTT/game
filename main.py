@@ -117,7 +117,7 @@ class Game(arcade.Window):
         self.player.update()
 
         self.time1 = time.time()
-        print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
+        # print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
         #time1
         self.send(f"{self.player.center_x} {self.player.center_y} {self.player_number}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
         
@@ -125,8 +125,9 @@ class Game(arcade.Window):
         #time2
         received_list = pickle.loads(client.recv(2048)) # TODO: instead of updating received_list in on_update, move it to a separate thread / not even part of Game(arcade.window). TODO: change server to consistently publish received_list on its own interval timer, not trigger by incoming messages. TODO: separate publish channel for chat?
         # ['0 0 0', '0 0 0']
+        print(received_list)
         self.time2 = time.time()
-        print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
+        # print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
         
         # update self.player2.center_x = whatever comes from socket
         # print(len(self.other_players_list), len(received_list))
