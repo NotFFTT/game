@@ -13,8 +13,8 @@ SCREEN_TITLE = "MULTISHOOTER (please work)"
 PLAYER_MOVEMENT_SPEED = 13
 PORT = 8080
 HEADER = 64
-SERVER = "143.198.247.145"
-#SERVER = 'localhost'
+# SERVER = "143.198.247.145"
+SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
@@ -62,7 +62,7 @@ class Game(arcade.Window):
         self.player_number = pickle.loads(client.recv(2048))
         self.title = f"Player number: {self.player_number}"
         
-        self.player = arcade.Sprite(":resources:images/animated_characters/zombie/zombie_idle.png") # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
+        self.player = arcade.Sprite() # TODO: does sprite need a texture? # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
         self.player.texture = self.skins[self.player_number]
         self.player.center_x = 500
         self.player.center_y = 500
@@ -105,6 +105,14 @@ class Game(arcade.Window):
         self.player.draw()
         #self.other_players_list.draw()
 
+    def send(self, msg):
+        message = pickle.dumps(msg)
+        msg_len = len(message)
+        send_length = str(msg_len).encode(FORMAT)
+        send_length += b' ' * (HEADER - len(send_length))
+        client.send(send_length)
+        client.send(message)
+
     def on_update(self, delta_time):
         self.player.update()
 
@@ -128,6 +136,7 @@ class Game(arcade.Window):
 
         # loop through the other_players_list and update their values to client.recv
         index = 0
+        # other_players_list = ['0 0 0', '0 0 0', '0 0 0', '0 0 0']
         for player in self.other_players_list:
             current = received_list[index].split()
             player.center_x = float(current[0])
@@ -135,14 +144,6 @@ class Game(arcade.Window):
             player.texture = self.skins[str(current[2])]
             index += 1
         self.other_players_list.update()
-        
-    def send(self, msg):
-        message = pickle.dumps(msg)
-        msg_len = len(message)
-        send_length = str(msg_len).encode(FORMAT)
-        send_length += b' ' * (HEADER - len(send_length))
-        client.send(send_length)
-        client.send(message)
 
        
 def main():
