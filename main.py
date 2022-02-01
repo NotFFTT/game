@@ -13,10 +13,12 @@ SCREEN_TITLE = "MULTISHOOTER (please work)"
 PLAYER_MOVEMENT_SPEED = 13
 PORT = 8080
 HEADER = 64
-SERVER = "143.198.247.145"
-#SERVER = 'localhost'
+# SERVER = "143.198.247.145"
+SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
+GRAVITY = 1
+PLAYER_JUMP_SPEED = 20
 
 # socket
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -44,6 +46,7 @@ class Game(arcade.Window):
 
         self.time1 = time.time()
         self.time2 = time.time()
+        
 
     def setup(self):
 
@@ -66,12 +69,18 @@ class Game(arcade.Window):
         self.player.texture = self.skins[self.player_number]
         self.player.center_x = 500
         self.player.center_y = 500
+        
+        self.scene.add_sprite_list("Player")
+        self.scene.add_sprite("Player", self.player)
 
         self.other_players_list = arcade.SpriteList()
         
         # global update_received_list
 
         # TODO: create a new thread to update_received_list()
+        
+        
+        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
     
 
     def on_key_press(self, symbol: int, modifiers: int):
@@ -81,7 +90,9 @@ class Game(arcade.Window):
         elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
             self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.UP or symbol == arcade.key.W:
-            self.player.change_y = PLAYER_MOVEMENT_SPEED
+            if self.physics_engine.can_jump():
+                self.player.change_y = PLAYER_JUMP_SPEED
+            # self.player.change_y = PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.DOWN or symbol == arcade.key.S:
             self.player.change_y = -1 * PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.Q:
@@ -103,11 +114,13 @@ class Game(arcade.Window):
         self.clear()
         self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
         self.player.draw()
+                
         #self.other_players_list.draw()
 
     def on_update(self, delta_time):
         self.player.update()
-
+        self.physics_engine.update()
+        
         self.time1 = time.time()
         print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
         #time1
