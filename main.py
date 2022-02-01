@@ -61,7 +61,7 @@ class Game(arcade.Window):
 
         self.send('SETUP')
         self.player_number = pickle.loads(client.recv(2048))
-        self.title = f"Player number: {self.player_number}"
+        self.title = f"Player number: {int(self.player_number) + 1}"
         
         self.player = arcade.Sprite() # TODO: does sprite need a texture? # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
         self.player.texture = self.skins[self.player_number]
@@ -105,6 +105,18 @@ class Game(arcade.Window):
         self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
         self.player.draw()
         self.other_players_list.draw()
+
+        player_name = "Player " + str(int(self.player_number) + 1)
+
+        arcade.draw_text(
+            player_name,
+            self.player.center_x - self.player.height/4,
+            self.player.center_y + self.player.height/3,
+            arcade.color.WHITE,
+            font_size = 12,
+            align = "center",
+            width=90,
+        )
 
     def send(self, msg):
         message = pickle.dumps(msg)
