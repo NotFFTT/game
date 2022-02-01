@@ -13,6 +13,7 @@ SCREEN_TITLE = "MULTISHOOTER (please work)"
 PLAYER_MOVEMENT_SPEED = 13
 PORT = 8080
 HEADER = 64
+
 # SERVER = "143.198.247.145"
 SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
@@ -103,7 +104,7 @@ class Game(arcade.Window):
         self.clear()
         self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
         self.player.draw()
-        #self.other_players_list.draw()
+        self.other_players_list.draw()
 
     def send(self, msg):
         message = pickle.dumps(msg)
@@ -144,6 +145,7 @@ class Game(arcade.Window):
             player.center_y = float(current[1])
             player.texture = self.skins[str(current[2])]
             index += 1
+    
         self.other_players_list.update()
 
        
