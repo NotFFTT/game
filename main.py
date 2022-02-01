@@ -4,7 +4,7 @@ import socket
 import pickle
 import time
 import threading
-# from pyglet.gl.gl import GL_NEAREST # TODO: Uncomment when ready to add custom tilemap.
+from pyglet.gl.gl import GL_NEAREST # TODO: Uncomment when ready to add custom tilemap.
 
 # Constants
 SCREEN_WIDTH = 1000
@@ -13,8 +13,8 @@ SCREEN_TITLE = "MULTISHOOTER (please work)"
 PLAYER_MOVEMENT_SPEED = 13
 PORT = 8080
 HEADER = 64
-# SERVER = "143.198.247.145"
-SERVER = 'localhost'
+SERVER = "143.198.247.145"
+#SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
@@ -47,6 +47,10 @@ class Game(arcade.Window):
 
     def setup(self):
 
+        # TODO: Uncomment when ready to add custom tilemap.
+        self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=2, use_spatial_hash=True)
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
+
         self.skins = {
             '0': arcade.load_texture(":resources:images/animated_characters/zombie/zombie_idle.png"),
             '1': arcade.load_texture(":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png"),
@@ -68,11 +72,6 @@ class Game(arcade.Window):
         # global update_received_list
 
         # TODO: create a new thread to update_received_list()
-
-
-        # TODO: Uncomment when ready to add custom tilemap.
-        # self.tile_map = arcade.load_tilemap("assets/map/map2.json", scaling=1, use_spatial_hash=True)
-        # self.scene = arcade.Scene.from_tilemap(self.tile_map)
     
 
     def on_key_press(self, symbol: int, modifiers: int):
@@ -102,9 +101,9 @@ class Game(arcade.Window):
 
     def on_draw(self):
         self.clear()
+        self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
         self.player.draw()
-        self.other_players_list.draw()
-        # self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
+        #self.other_players_list.draw()
 
     def on_update(self, delta_time):
         self.player.update()
