@@ -106,17 +106,29 @@ class Game(arcade.Window):
         self.player.draw()
         self.other_players_list.draw()
 
-        player_name = "Player " + str(int(self.player_number) + 1)
+        
 
-        arcade.draw_text(
-            player_name,
-            self.player.center_x - self.player.height/4,
-            self.player.center_y + self.player.height/3,
-            arcade.color.WHITE,
-            font_size = 12,
-            align = "center",
-            width=90,
-        )
+        # arcade.draw_text(
+        #     player_name,
+        #     self.player.center_x - self.player.height/4,
+        #     self.player.center_y + self.player.height/3,
+        #     arcade.color.WHITE,
+        #     font_size = 12,
+        #     align = "center",
+        #     width=90,
+        # )
+
+        for player in self.other_players_list:
+            player_name = "Player " + str(int(player.name) + 1)
+            arcade.draw_text(
+                player_name,
+                player.center_x - player.height/4,
+                player.center_y + player.height/3,
+                arcade.color.WHITE,
+                font_size = 12,
+                align = "center",
+                width=90,
+            )
 
     def send(self, msg):
         message = pickle.dumps(msg)
@@ -153,6 +165,7 @@ class Game(arcade.Window):
         # other_players_list = ['0 0 0', '0 0 0', '0 0 0', '0 0 0']
         for player in self.other_players_list:
             current = received_list[index].split()
+            player.name = str(current[2])
             player.center_x = float(current[0])
             player.center_y = float(current[1])
             player.texture = self.skins[str(current[2])]
