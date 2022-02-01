@@ -33,7 +33,7 @@ def handle_client(connection, address, player_number):
             if msg == 'SETUP':
                 #ADD NEW PLAYER
                 players[player_number] = "0 0 0"
-                connection.send(pickle.dumps(str(player_number)))
+                connection.send(pickle.dumps(str(player_number)))   # TODO: do not send back data when setup if global received_list is used.
                 continue
         
             players[player_number] = msg

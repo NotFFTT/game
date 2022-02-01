@@ -2,7 +2,9 @@ import re
 import arcade
 import socket
 import pickle
-# from pyglet.gl.gl import GL_NEAREST # TODO: Uncomment when ready to add custom tilemap.
+import time
+import threading
+from pyglet.gl.gl import GL_NEAREST # TODO: Uncomment when ready to add custom tilemap.
 
 # Constants
 SCREEN_WIDTH = 1000
@@ -11,14 +13,23 @@ SCREEN_TITLE = "MULTISHOOTER (please work)"
 PLAYER_MOVEMENT_SPEED = 13
 PORT = 8080
 HEADER = 64
-# SERVER = "143.198.247.145"
-SERVER = 'localhost'
+SERVER = "143.198.247.145"
+#SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
 # socket
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDRESS)
+
+# thread = threading.Thread(target=update_received_list, args=())
+# thread.start()
+
+# received_list = None
+# def update_received_list():
+#     while True:
+#         global received_list
+#         received_list = pickle.loads(client.recv(2048))
 
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
@@ -31,7 +42,14 @@ class Game(arcade.Window):
         self.other_players_list = None
         self.tile_map = None
 
+        self.time1 = time.time()
+        self.time2 = time.time()
+
     def setup(self):
+
+        # TODO: Uncomment when ready to add custom tilemap.
+        self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=2, use_spatial_hash=True)
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         self.skins = {
             '0': arcade.load_texture(":resources:images/animated_characters/zombie/zombie_idle.png"),
@@ -50,10 +68,10 @@ class Game(arcade.Window):
         self.player.center_y = 500
 
         self.other_players_list = arcade.SpriteList()
+        
+        # global update_received_list
 
-        # TODO: Uncomment when ready to add custom tilemap.
-        # self.tile_map = arcade.load_tilemap("assets/map/map2.json", scaling=1, use_spatial_hash=True)
-        # self.scene = arcade.Scene.from_tilemap(self.tile_map)
+        # TODO: create a new thread to update_received_list()
     
 
     def on_key_press(self, symbol: int, modifiers: int):
@@ -83,21 +101,27 @@ class Game(arcade.Window):
 
     def on_draw(self):
         self.clear()
+        self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
         self.player.draw()
-        self.other_players_list.draw()
-        # self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
+        #self.other_players_list.draw()
 
     def on_update(self, delta_time):
         self.player.update()
 
+        self.time1 = time.time()
+        print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
+        #time1
         self.send(f"{self.player.center_x} {self.player.center_y} {self.player_number}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
         
         # receive player2 location through socket
+        #time2
         received_list = pickle.loads(client.recv(2048)) # TODO: instead of updating received_list in on_update, move it to a separate thread / not even part of Game(arcade.window). TODO: change server to consistently publish received_list on its own interval timer, not trigger by incoming messages. TODO: separate publish channel for chat?
         # ['0 0 0', '0 0 0']
+        self.time2 = time.time()
+        print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
         
         # update self.player2.center_x = whatever comes from socket
-        print(len(self.other_players_list), len(received_list))
+        # print(len(self.other_players_list), len(received_list))
         while len(self.other_players_list) - len(received_list) and len(received_list) - len(self.other_players_list) > 0:
             print("while loop")
             self.other_players_list.append(arcade.Sprite())
