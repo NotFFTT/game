@@ -106,28 +106,26 @@ class Game(arcade.Window):
         self.player.draw()
         self.other_players_list.draw()
 
-        
-
-        # arcade.draw_text(
-        #     player_name,
-        #     self.player.center_x - self.player.height/4,
-        #     self.player.center_y + self.player.height/3,
-        #     arcade.color.WHITE,
-        #     font_size = 12,
-        #     align = "center",
-        #     width=90,
-        # )
-
+        # TODO: if there's issues with textbox above player out of alignment with sprite, might need to create textbox off client's version of player instead of server's version.
         for player in self.other_players_list:
             player_name = "Player " + str(int(player.name) + 1)
+            arcade.draw_rectangle_filled(
+                player.center_x,
+                player.center_y + player.height/3,
+                width=115,
+                height=25,
+                color=arcade.color.WHITE,
+            )
             arcade.draw_text(
                 player_name,
-                player.center_x - player.height/4,
+                player.center_x - 115/2,
                 player.center_y + player.height/3,
-                arcade.color.WHITE,
+                arcade.color.BLACK,
                 font_size = 12,
+                bold=True,
                 align = "center",
-                width=90,
+                width=115,
+                font_name="Kenney Future",
             )
 
     def send(self, msg):
