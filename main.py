@@ -13,6 +13,7 @@ SCREEN_TITLE = "MULTISHOOTER (please work)"
 PLAYER_MOVEMENT_SPEED = 13
 PORT = 8080
 HEADER = 64
+
 # SERVER = "143.198.247.145"
 SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
@@ -63,9 +64,9 @@ class Game(arcade.Window):
 
         self.send('SETUP')
         self.player_number = pickle.loads(client.recv(2048))
-        self.title = f"Player number: {self.player_number}"
+        self.title = f"Player number: {int(self.player_number) + 1}"
         
-        self.player = arcade.Sprite(":resources:images/animated_characters/zombie/zombie_idle.png") # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
+        self.player = arcade.Sprite() # TODO: does sprite need a texture? # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
         self.player.texture = self.skins[self.player_number]
         self.player.center_x = 500
         self.player.center_y = 500
@@ -114,15 +115,46 @@ class Game(arcade.Window):
         self.clear()
         self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
         self.player.draw()
-                
-        #self.other_players_list.draw()
+
+        self.other_players_list.draw()
+
+        # TODO: if there's issues with textbox above player out of alignment with sprite, might need to create textbox off client's version of player instead of server's version.
+        for player in self.other_players_list:
+            player_name = "Player " + str(int(player.name) + 1)
+            arcade.draw_rectangle_filled(
+                player.center_x,
+                player.center_y + player.height/3,
+                width=115,
+                height=25,
+                color=arcade.color.WHITE,
+            )
+            arcade.draw_text(
+                player_name,
+                player.center_x - 115/2,
+                player.center_y + player.height/3,
+                arcade.color.BLACK,
+                font_size = 12,
+                bold=True,
+                align = "center",
+                width=115,
+                font_name="Kenney Future",
+            )
+
+    def send(self, msg):
+        message = pickle.dumps(msg)
+        msg_len = len(message)
+        send_length = str(msg_len).encode(FORMAT)
+        send_length += b' ' * (HEADER - len(send_length))
+        client.send(send_length)
+        client.send(message)
+
 
     def on_update(self, delta_time):
         self.player.update()
         self.physics_engine.update()
         
         self.time1 = time.time()
-        print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
+        # print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
         #time1
         self.send(f"{self.player.center_x} {self.player.center_y} {self.player_number}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
         
@@ -130,8 +162,9 @@ class Game(arcade.Window):
         #time2
         received_list = pickle.loads(client.recv(2048)) # TODO: instead of updating received_list in on_update, move it to a separate thread / not even part of Game(arcade.window). TODO: change server to consistently publish received_list on its own interval timer, not trigger by incoming messages. TODO: separate publish channel for chat?
         # ['0 0 0', '0 0 0']
+        print(received_list)
         self.time2 = time.time()
-        print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
+        # print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
         
         # update self.player2.center_x = whatever comes from socket
         # print(len(self.other_players_list), len(received_list))
@@ -141,21 +174,16 @@ class Game(arcade.Window):
 
         # loop through the other_players_list and update their values to client.recv
         index = 0
+        # other_players_list = ['0 0 0', '0 0 0', '0 0 0', '0 0 0']
         for player in self.other_players_list:
             current = received_list[index].split()
+            player.name = str(current[2])
             player.center_x = float(current[0])
             player.center_y = float(current[1])
             player.texture = self.skins[str(current[2])]
             index += 1
+    
         self.other_players_list.update()
-        
-    def send(self, msg):
-        message = pickle.dumps(msg)
-        msg_len = len(message)
-        send_length = str(msg_len).encode(FORMAT)
-        send_length += b' ' * (HEADER - len(send_length))
-        client.send(send_length)
-        client.send(message)
 
        
 def main():

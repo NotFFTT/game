@@ -40,7 +40,8 @@ def handle_client(connection, address, player_number):
             
             if msg == 'DISCONNECT':
                 #REMOVE PLAYER
-                del players[player_number]
+                #del players[player_number] # TODO: Uncomment when list actually works as a variable length list
+                players[player_number] = "0 0 0"
                 connection.close()
                 break
 
