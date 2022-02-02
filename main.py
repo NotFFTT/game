@@ -5,25 +5,24 @@ import socket
 import pickle
 import time
 import threading
+import struct
 from pyglet.gl.gl import GL_NEAREST # TODO: Uncomment when ready to add custom tilemap.
 
 # Constants
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 650
 SCREEN_TITLE = "MULTISHOOTER (please work)"
-PLAYER_MOVEMENT_SPEED = 3
-GRAVITY = 0.3
-PLAYER_JUMP_SPEED = 6
+PLAYER_MOVEMENT_SPEED = 5
 
 
 PORT = 8080
 HEADER = 64
-# SERVER = "143.198.247.145"
-SERVER = 'localhost'
+SERVER = "143.198.247.145"
+#SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 GRAVITY = 1
-PLAYER_JUMP_SPEED = 20
+PLAYER_JUMP_SPEED = 15
 
 HEALTHBAR_WIDTH = 80
 HEALTHBAR_HEIGHT = 20
@@ -36,18 +35,20 @@ HEALTH_NUMBER_OFFSET_Y = -20
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDRESS)
 
-# thread = threading.Thread(target=update_received_list, args=())
-# thread.start()
-
-# received_list = None
-# def update_received_list():
-#     while True:
-#         global received_list
-#         received_list = pickle.loads(client.recv(2048))
+# 2nd UDP socket to receive data from server's multicasted server_data.
+server_data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_data_socket.connect((SERVER, 5007))
+received_list = ["111 500 0", "110 555 0", "220 500 0", "10 500 0"]
+def get_server_data():
+    print('hi')
+    while True:
+        global received_list
+        received_list = pickle.loads(server_data_socket.recv(2048))
+        print('received message: ', received_list)
 
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
-        super().__init__(width, height, title)
+        super().__init__(width, height, title, update_rate=float(1/60))
         arcade.set_background_color(arcade.csscolor.BLUE)
         self.player = None
         self.physics_engine = None
@@ -61,7 +62,6 @@ class Game(arcade.Window):
         self.time1 = time.time()
         self.time2 = time.time()
         
-
     def setup(self):
 
         # TODO: Uncomment when ready to add custom tilemap.
@@ -225,6 +225,9 @@ class Game(arcade.Window):
         client.send(send_length)
         client.send(message)
 
+
+# AttributeError: ObjCInstance b'NSTrackingArea' has no attribute b'type'
+
     def on_update(self, delta_time):
         self.player.update()
         self.physics_engine.update()
@@ -236,14 +239,14 @@ class Game(arcade.Window):
         
         # receive player2 location through socket
         #time2
-        received_list = pickle.loads(client.recv(2048)) # TODO: instead of updating received_list in on_update, move it to a separate thread / not even part of Game(arcade.window). TODO: change server to consistently publish received_list on its own interval timer, not trigger by incoming messages. TODO: separate publish channel for chat?
+        #received_list = pickle.loads(client.recv(2048)) # TODO: instead of updating received_list in on_update, move it to a separate thread / not even part of Game(arcade.window). TODO: change server to consistently publish received_list on its own interval timer, not trigger by incoming messages. TODO: separate publish channel for chat?
         # ['0 0 0', '0 0 0']
         # print(received_list)
         self.time2 = time.time()
         # print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
         
         # update self.player2.center_x = whatever comes from socket
-        print(len(self.other_players_list), len(received_list))
+        #print(len(self.other_players_list), len(received_list))
         while len(received_list) - len(self.other_players_list) and len(received_list) - len(self.other_players_list) > 0:
             print("while loop")
             self.other_players_list.append(arcade.Sprite())
@@ -271,6 +274,8 @@ class Game(arcade.Window):
 
        
 def main():
+    thread = threading.Thread(target=get_server_data, args=())
+    thread.start()
     window = Game()
     window.setup()
     arcade.run()
