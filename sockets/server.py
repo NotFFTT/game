@@ -17,7 +17,7 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 server.bind(ADDRESS)
 
-players = ["0 0 0", "0 0 0", "0 0 0", "0 0 0"]
+players = ["111 500 0", "110 555 0", "220 500 0", "10 500 0"]
 
 def handle_client(connection, address, player_number):
     connected = True
@@ -32,7 +32,8 @@ def handle_client(connection, address, player_number):
 
             if msg == 'SETUP':
                 #ADD NEW PLAYER
-                players[player_number] = "0 0 0"
+                #players[player_number] = "0 0 0"
+                players[player_number] = f"{player_number * 100} 500 0"
                 connection.send(pickle.dumps(str(player_number)))   # TODO: do not send back data when setup if global received_list is used.
                 continue
         
@@ -41,7 +42,7 @@ def handle_client(connection, address, player_number):
             if msg == 'DISCONNECT':
                 #REMOVE PLAYER
                 #del players[player_number] # TODO: Uncomment when list actually works as a variable length list
-                players[player_number] = "0 0 0"
+                players[player_number] = "550 550 0"
                 connection.close()
                 break
 
