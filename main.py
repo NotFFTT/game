@@ -46,6 +46,74 @@ def get_server_data():
         received_list = pickle.loads(server_data_socket.recv(2048))
         #print('received message: ', received_list)
 
+
+class Player(arcade.Sprite):
+    def __init__(self, max_health=100):
+        super().__init__()
+        self.max_health = max_health
+        self.state = 'idle'
+        self.direction = 0
+        self.animation_start = time.time_ns()
+
+        idle = []
+        for i in range(6):
+            idle.append(arcade.load_texture_pair(f"assets/earth/idle/idle_{i+1}.png"))
+
+        run = []
+        for i in range(8):
+            run.append(arcade.load_texture_pair(f"assets/earth/run/run_{i+1}.png"))
+            
+        atk_1 = []
+        for i in range(6):
+             atk_1.append(arcade.load_texture_pair(f"assets/earth/1_atk/1_atk_{i+1}.png"))
+
+        self.animation_cells = {
+            'idle': idle, # [[loaded_left,loaded_right],[loaded_left,loaded_right],[loaded_left,loaded_right],[loaded_left,loaded_right],[loaded_left,loaded_right],[loaded_left,loaded_right],[loaded_left,loaded_right]]
+            'run': run,
+            "atk_1": atk_1,
+        }
+
+    def on_update(self, delta_time):
+        self.update_animation(delta_time)
+        if self.change_x > 0:
+            self.direction = 0
+        if self.change_x < 0:
+            self.direction = 1
+
+    def update_animation(self, delta_time):
+        # the thing that sets state to idle sets self.animation_start to now
+
+        if self.state == 'idle':
+            # how much time has elapsed (difference between now and self.animation_start)
+            number_of_frames = 6
+            total_animation_time = .5
+            time_now = time.time_ns()
+            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff (units of seconds)
+            current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
+            # time_diff scales to 8 animation frames within 0.5 seconds.
+            # time_diff = 0 results in current_animation_frame = 0
+            # time_diff = 0.5 results in current_animation_frame = 8
+            # current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
+            # current_animation_frame = time_diff * 8 / 0.5
+            # caf = 0.5 * 8 / 0.5 = 8th frame
+            # caf = round(0.2 * 8 / 0.5) = 3.2th frame
+            # caf = 1 * 8 / 0.5 = 8th frame
+
+            self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
+
+
+        elif self.state == "atk_1":
+            number_of_frames = 6
+            total_animation_time = .5
+            time_now = time.time_ns()
+            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff (units of seconds)
+            current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
+
+            if current_animation_frame + 1 > number_of_frames:
+                self.state = "idle"
+            else:
+                self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
+
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
         super().__init__(width, height, title, update_rate=float(1/60))
@@ -77,10 +145,10 @@ class Game(arcade.Window):
 
         self.send('SETUP')
         
-        self.player = arcade.Sprite() # TODO: does sprite need a texture? # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
+        self.player = Player() # TODO: does sprite need a texture? # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
         self.player.player_number = pickle.loads(client.recv(2048))
         self.player.texture = self.skins[self.player.player_number]
-        self.player.scale = 0.5
+        self.player.scale = 2
         self.title = f"Player number: {int(self.player.player_number) + 1}"
 
         self.player.center_x = 100
@@ -107,7 +175,7 @@ class Game(arcade.Window):
             self.player.change_x = PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
             self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
-        elif symbol == arcade.key.UP or symbol == arcade.key.W:
+        elif symbol == arcade.key.UP or symbol == arcade.key.W or symbol == arcade.key.SPACE:
             if self.physics_engine.can_jump():
                 self.player.change_y = PLAYER_JUMP_SPEED
                 self.physics_engine.increment_jump_counter()
@@ -117,6 +185,9 @@ class Game(arcade.Window):
         elif symbol == arcade.key.Q:
             self.send("DISCONNECT")
             arcade.exit()
+        elif symbol == arcade.key.E:
+            self.player.state = "atk_1"
+            self.player.animation_start = time.time_ns()
             
     def on_key_release(self, symbol: int, modifiers: int):
         
@@ -127,6 +198,8 @@ class Game(arcade.Window):
         elif symbol == arcade.key.UP or symbol == arcade.key.W:
             pass
         elif symbol == arcade.key.DOWN or symbol == arcade.key.S:
+            pass
+        elif symbol == arcade.key.E:
             pass
 
     def on_draw(self):
@@ -229,6 +302,7 @@ class Game(arcade.Window):
 
     def on_update(self, delta_time):
         self.player.update()
+        self.player.on_update(delta_time)
         self.physics_engine.update()
         
         self.time1 = time.time()
@@ -261,29 +335,30 @@ class Game(arcade.Window):
             server_change_x = float(current[4])
             server_change_y = float(current[5])
             server_time = int(current[3])
+
+            player.curr_health = 80 #TODO update from server
+            player.player_number = str(current[2])
+            player.scale = 0.5
         
             if current[2] == self.player.player_number:
                 if self.player.center_y < -1000:
                     # TODO kill player
                     self.player.center_x = 100
                     self.player.center_y = 160
-                pass
+                continue
+            else:
+                time_difference = (time.time_ns() - server_time)/1000/1000/1000
 
-            time_difference = (time.time_ns() - server_time)/1000/1000/1000
+                player.center_x = server_center_x + time_difference * 2*server_change_x/delta_time
+                if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
+                    player.center_x = server_center_x
 
-            player.center_x = server_center_x + time_difference * 2*server_change_x/delta_time
-            if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
-                player.center_x = server_center_x
+                player.center_y = server_center_y + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
+                if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
+                    player.center_y = server_center_y
 
-            player.center_y = server_center_y + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
-            if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
-                player.center_y = server_center_y
-
-            player.curr_health = 80 #TODO update from server
-            player.player_number = str(current[2])
-            player.scale = 0.5
-            player.texture = self.skins[str(current[2])]
-
+                player.texture = self.skins[str(current[2])]
+                
             index += 1
     
         self.other_players_list.update()
