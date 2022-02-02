@@ -1,3 +1,4 @@
+from ast import Pass
 import re
 import arcade
 import socket
@@ -10,17 +11,17 @@ from pyglet.gl.gl import GL_NEAREST # TODO: Uncomment when ready to add custom t
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 650
 SCREEN_TITLE = "MULTISHOOTER (please work)"
-PLAYER_MOVEMENT_SPEED = 13
+PLAYER_MOVEMENT_SPEED = 3
+GRAVITY = 0.3
+PLAYER_JUMP_SPEED = 6
+
+
 PORT = 8080
 HEADER = 64
-
 # SERVER = "143.198.247.145"
 SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
-GRAVITY = 1
-PLAYER_JUMP_SPEED = 20
-
 # socket
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDRESS)
@@ -39,7 +40,6 @@ class Game(arcade.Window):
         super().__init__(width, height, title)
         arcade.set_background_color(arcade.csscolor.BLUE)
         self.player = None
-        self.player_number = None
         self.physics_engine = None
         self.skins = None
         self.other_players_list = None
@@ -52,7 +52,7 @@ class Game(arcade.Window):
     def setup(self):
 
         # TODO: Uncomment when ready to add custom tilemap.
-        self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=2, use_spatial_hash=True)
+        self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=1.5, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         self.skins = {
@@ -63,16 +63,19 @@ class Game(arcade.Window):
         }
 
         self.send('SETUP')
-        self.player_number = pickle.loads(client.recv(2048))
-        self.title = f"Player number: {int(self.player_number) + 1}"
         
         self.player = arcade.Sprite() # TODO: does sprite need a texture? # TODO: setting texture then immediately changing it to the new texture is odd. Should just set to the intended texture immediately.
-        self.player.texture = self.skins[self.player_number]
-        self.player.center_x = 500
-        self.player.center_y = 500
+        self.player.player_number = pickle.loads(client.recv(2048))
+        self.player.texture = self.skins[self.player.player_number]
+        self.player.scale = 0.5
+        self.title = f"Player number: {int(self.player.player_number) + 1}"
+
+        self.player.center_x = 100
+        self.player.center_y = 160
         
-        self.scene.add_sprite_list("Player")
-        self.scene.add_sprite("Player", self.player)
+        # TODO: should all sprites be in the scene or not?
+        # self.scene.add_sprite_list("Player")
+        # self.scene.add_sprite("Player", self.player)
 
         self.other_players_list = arcade.SpriteList()
         
@@ -80,9 +83,8 @@ class Game(arcade.Window):
 
         # TODO: create a new thread to update_received_list()
         
-        
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
-    
+        self.physics_engine.enable_multi_jump(2)
 
     def on_key_press(self, symbol: int, modifiers: int):
 
@@ -93,6 +95,7 @@ class Game(arcade.Window):
         elif symbol == arcade.key.UP or symbol == arcade.key.W:
             if self.physics_engine.can_jump():
                 self.player.change_y = PLAYER_JUMP_SPEED
+                self.physics_engine.increment_jump_counter()
             # self.player.change_y = PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.DOWN or symbol == arcade.key.S:
             self.player.change_y = -1 * PLAYER_MOVEMENT_SPEED
@@ -107,9 +110,9 @@ class Game(arcade.Window):
         elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
             self.player.change_x = 0
         elif symbol == arcade.key.UP or symbol == arcade.key.W:
-            self.player.change_y = 0
+            pass
         elif symbol == arcade.key.DOWN or symbol == arcade.key.S:
-            self.player.change_y = 0
+            pass
 
     def on_draw(self):
         self.clear()
@@ -118,27 +121,49 @@ class Game(arcade.Window):
 
         self.other_players_list.draw()
 
+        
+        player_name = "Player " + str(int(self.player.player_number) + 1)
+        arcade.draw_rectangle_filled(
+            self.player.center_x,
+            self.player.center_y + self.player.height/3,
+            width=115,
+            height=25,
+            color=arcade.color.WHITE,
+        )
+        arcade.draw_text(
+            player_name,
+            self.player.center_x - 115/2,
+            self.player.center_y + self.player.height/3,
+            arcade.color.BLACK,
+            font_size = 12,
+            bold=True,
+            align = "center",
+            width=115,
+            font_name="Kenney Future",
+        )
+
         # TODO: if there's issues with textbox above player out of alignment with sprite, might need to create textbox off client's version of player instead of server's version.
         for player in self.other_players_list:
-            player_name = "Player " + str(int(player.name) + 1)
-            arcade.draw_rectangle_filled(
-                player.center_x,
-                player.center_y + player.height/3,
-                width=115,
-                height=25,
-                color=arcade.color.WHITE,
-            )
-            arcade.draw_text(
-                player_name,
-                player.center_x - 115/2,
-                player.center_y + player.height/3,
-                arcade.color.BLACK,
-                font_size = 12,
-                bold=True,
-                align = "center",
-                width=115,
-                font_name="Kenney Future",
-            )
+            if hasattr(player, "player_number"):
+                player_name = "Player " + str(int(player.player_number) + 1)
+                arcade.draw_rectangle_filled(
+                    player.center_x,
+                    player.center_y + player.height/3,
+                    width=115,
+                    height=25,
+                    color=arcade.color.WHITE,
+                )
+                arcade.draw_text(
+                    player_name,
+                    player.center_x - 115/2,
+                    player.center_y + player.height/3,
+                    arcade.color.BLACK,
+                    font_size = 12,
+                    bold=True,
+                    align = "center",
+                    width=115,
+                    font_name="Kenney Future",
+                )
 
     def send(self, msg):
         message = pickle.dumps(msg)
@@ -156,19 +181,19 @@ class Game(arcade.Window):
         self.time1 = time.time()
         # print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
         #time1
-        self.send(f"{self.player.center_x} {self.player.center_y} {self.player_number}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
+        self.send(f"{self.player.center_x} {self.player.center_y} {self.player.player_number}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
         
         # receive player2 location through socket
         #time2
         received_list = pickle.loads(client.recv(2048)) # TODO: instead of updating received_list in on_update, move it to a separate thread / not even part of Game(arcade.window). TODO: change server to consistently publish received_list on its own interval timer, not trigger by incoming messages. TODO: separate publish channel for chat?
         # ['0 0 0', '0 0 0']
-        print(received_list)
+        # print(received_list)
         self.time2 = time.time()
         # print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
         
         # update self.player2.center_x = whatever comes from socket
-        # print(len(self.other_players_list), len(received_list))
-        while len(self.other_players_list) - len(received_list) and len(received_list) - len(self.other_players_list) > 0:
+        print(len(self.other_players_list), len(received_list))
+        while len(received_list) - len(self.other_players_list) and len(received_list) - len(self.other_players_list) > 0:
             print("while loop")
             self.other_players_list.append(arcade.Sprite())
 
@@ -177,10 +202,17 @@ class Game(arcade.Window):
         # other_players_list = ['0 0 0', '0 0 0', '0 0 0', '0 0 0']
         for player in self.other_players_list:
             current = received_list[index].split()
-            player.name = str(current[2])
+            if current[2] == self.player.player_number:
+                if self.player.center_y < -1000:
+                    # TODO kill player
+                    self.player.center_x = 100
+                    self.player.center_y = 160
+                pass
+            player.player_number = str(current[2])
             player.center_x = float(current[0])
             player.center_y = float(current[1])
             player.texture = self.skins[str(current[2])]
+            player.scale = 0.5
             index += 1
     
         self.other_players_list.update()

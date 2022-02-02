@@ -71,7 +71,7 @@
  "tilesets":[
         {
          "firstgid":1,
-         "source":"cuteforest\/BG1.tsx"
+         "source":"BG1.tsx"
         }, 
         {
          "firstgid":241,
@@ -79,15 +79,15 @@
         }, 
         {
          "firstgid":481,
-         "source":"cuteforest\/BG2.tsx"
+         "source":"BG2.tsx"
         }, 
         {
          "firstgid":721,
-         "source":"cuteforest\/Decors.tsx"
+         "source":"Decors.tsx"
         }, 
         {
          "firstgid":819,
-         "source":"cuteforest\/forrest-tiles.tsx"
+         "source":"forrest-tiles.tsx"
         }],
  "tilewidth":16,
  "type":"map",
