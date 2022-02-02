@@ -22,6 +22,16 @@ HEADER = 64
 SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
+GRAVITY = 1
+PLAYER_JUMP_SPEED = 20
+
+HEALTHBAR_WIDTH = 80
+HEALTHBAR_HEIGHT = 20
+HEALTHBAR_OFFSET_Y = -10
+HEALTH_NUMBER_OFFSET_X = -20
+HEALTH_NUMBER_OFFSET_Y = -20
+
+
 # socket
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(ADDRESS)
@@ -44,6 +54,9 @@ class Game(arcade.Window):
         self.skins = None
         self.other_players_list = None
         self.tile_map = None
+        
+        self.max_health = None
+        self.curr_health = None
 
         self.time1 = time.time()
         self.time2 = time.time()
@@ -84,7 +97,9 @@ class Game(arcade.Window):
         # TODO: create a new thread to update_received_list()
         
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
+
         self.physics_engine.enable_multi_jump(2)
+
 
     def on_key_press(self, symbol: int, modifiers: int):
 
@@ -164,6 +179,44 @@ class Game(arcade.Window):
                     font_name="Kenney Future",
                 )
 
+        self.draw_healthbars()
+
+    def draw_healthbars(self):
+        self.max_health = 100
+        for index, player in enumerate(self.other_players_list):
+            
+            health_width = HEALTHBAR_WIDTH * (player.curr_health / self.max_health)
+            x = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
+            
+            arcade.draw_rectangle_filled(center_x = x,
+                            center_y=40 + HEALTHBAR_OFFSET_Y,
+                            width=HEALTHBAR_WIDTH,
+                            height=HEALTHBAR_HEIGHT,
+                            color=arcade.color.BLACK
+            )
+
+            if player.curr_health < self.max_health:
+                arcade.draw_rectangle_filled(center_x=x - .5 * (HEALTHBAR_WIDTH - health_width),
+                                            center_y=40 + HEALTHBAR_OFFSET_Y,
+                                            width=health_width,
+                                            height=HEALTHBAR_HEIGHT,
+                                            color=arcade.color.GREEN
+                )
+            
+            arcade.draw_text(f"{round(float(player.curr_health/self.max_health) * 100)}%",
+                            start_x = x + HEALTH_NUMBER_OFFSET_X,
+                            start_y = 40 + HEALTH_NUMBER_OFFSET_Y,
+                            font_size=14,
+                            color=arcade.color.WHITE
+            )
+            
+            arcade.draw_text(f"PLAYER {index + 1}",
+                            start_x = x + HEALTH_NUMBER_OFFSET_X,
+                            start_y = 65 + HEALTH_NUMBER_OFFSET_Y,
+                            font_size=14,
+                            color=arcade.color.WHITE
+            )
+        
     def send(self, msg):
         message = pickle.dumps(msg)
         msg_len = len(message)
@@ -210,6 +263,7 @@ class Game(arcade.Window):
             player.center_x = float(current[0])
             player.center_y = float(current[1])
             player.texture = self.skins[str(current[2])]
+            player.curr_health = 80 #TODO update from server
             player.scale = 0.5
             index += 1
     
