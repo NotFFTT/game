@@ -38,7 +38,7 @@ client.connect(ADDRESS)
 # 2nd UDP socket to receive data from server's multicasted server_data.
 server_data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_data_socket.connect((SERVER, 5007))
-received_list = ["111 500 0", "110 555 0", "220 500 0", "10 500 0"]
+received_list = ["111 500 0 0 0 0", "110 555 0 0 0 0", "220 500 0 0 0 0", "10 500 0 0 0 0"]
 def get_server_data():
     print('hi')
     while True:
@@ -235,7 +235,7 @@ class Game(arcade.Window):
         self.time1 = time.time()
         print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
         #time1
-        self.send(f"{self.player.center_x} {self.player.center_y} {self.player.player_number}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
+        self.send(f"{self.player.center_x} {self.player.center_y} {self.player.player_number} {time.time_ns()} {self.player.change_x} {self.player.change_y}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
         
         # receive player2 location through socket
         #time2
@@ -256,6 +256,13 @@ class Game(arcade.Window):
         # other_players_list = ['0 0 0', '0 0 0', '0 0 0', '0 0 0']
         for player in self.other_players_list:
             current = received_list[index].split()
+
+            server_center_x = float(current[0])
+            server_center_y = float(current[1])
+            server_change_x = float(current[4])
+            server_change_y = float(current[5])
+            server_time = float(current[3])
+        
             if current[2] == self.player.player_number:
                 if self.player.center_y < -1000:
                     # TODO kill player
@@ -263,8 +270,13 @@ class Game(arcade.Window):
                     self.player.center_y = 160
                 pass
             player.player_number = str(current[2])
-            player.center_x = float(current[0])
-            player.center_y = float(current[1])
+
+            player.center_x = server_center_x + (server_time - time.time()) * server_change_x
+            player.center_y = server_center_y + (server_time - time.time()) * server_change_y
+
+            player.change_x = server_change_x
+            player.change_y = server_change_y
+            
             player.texture = self.skins[str(current[2])]
             player.curr_health = 80 #TODO update from server
             player.scale = 0.5
