@@ -54,6 +54,7 @@ class Player(arcade.Sprite):
         self.state = 'idle'
         self.direction = 0
         self.animation_start = time.time_ns()
+        self.curr_health = max_health
 
         idle = []
         for i in range(6):
@@ -100,7 +101,7 @@ class Player(arcade.Sprite):
             # caf = 1 * 8 / 0.5 = 8th frame
 
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-
+            self.set_hit_box(self.texture.hit_box_points)   # Federinik33 on discord from some server comment a while ago.
 
         elif self.state == "atk_1":
             number_of_frames = 6
@@ -113,6 +114,7 @@ class Player(arcade.Sprite):
                 self.state = "idle"
             else:
                 self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
+                self.set_hit_box(self.texture.hit_box_points)   # Federinik33 on discord from some server comment a while ago.
 
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
@@ -250,6 +252,7 @@ class Game(arcade.Window):
                     width=115,
                     font_name="Kenney Future",
                 )
+        self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
 
         self.draw_healthbars()
 
@@ -322,7 +325,7 @@ class Game(arcade.Window):
         #print(len(self.other_players_list), len(received_list))
         while len(received_list) - len(self.other_players_list) and len(received_list) - len(self.other_players_list) > 0:
             #print("while loop")
-            self.other_players_list.append(arcade.Sprite())
+            self.other_players_list.append(Player())
 
         # loop through the other_players_list and update their values to client.recv
         index = 0
@@ -336,7 +339,6 @@ class Game(arcade.Window):
             server_change_y = float(current[5])
             server_time = int(current[3])
 
-            player.curr_health = 80 #TODO update from server
             player.player_number = str(current[2])
             player.scale = 0.5
         
@@ -358,9 +360,23 @@ class Game(arcade.Window):
                     player.center_y = server_center_y
 
                 player.texture = self.skins[str(current[2])]
+            player.set_hit_box(player.texture.hit_box_points)
                 
             index += 1
-    
+
+        if self.player.state == 'atk_1':
+            player_hit_list = arcade.check_for_collision_with_list(self.player, self.other_players_list)
+
+        # if not hasattr(player, "curr_health"):
+        #     player.curr_health = 100 #TODO update from server
+        #if player_hit_list:
+            for player in player_hit_list:
+                print("Hit Player")
+                player.curr_health -= 5*delta_time
+                if player.curr_health < 0:
+                    player.curr_health = 0
+                    continue # TODO: kill player
+
         self.other_players_list.update()
 
        
