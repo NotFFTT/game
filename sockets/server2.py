@@ -3,13 +3,14 @@ import socket
 import threading
 import pickle
 import time
+import random
 
 #PORT = 9999
 PORT = 8080
 HEADER = 64
 FORMAT = 'utf-8'
-#SERVER = 'localhost'
-SERVER = "0.0.0.0"
+SERVER = 'localhost'
+#SERVER = "0.0.0.0"
 ADDRESS = (SERVER, PORT)
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -50,10 +51,13 @@ def handle_client(connection, address, player_number):
 server_data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_data_socket.bind((SERVER, 5007))
 def send_server_data(connection2, address2, player_number):
-    while True:
-        time.sleep(20 / 1000)
-        connection2.sendto(pickle.dumps(players), (SERVER, 5007))
-        print('sent: ', players)
+    try:
+        while True:
+            time.sleep(random.randint(50, 50) / 1000)
+            connection2.sendto(pickle.dumps(players), (SERVER, 5007))
+            #print('sent: ', players)
+    except:
+        print('BrokenPipeError') # TODO: Make an actual exception.
 
 def start():
     server.listen(4)
