@@ -9,8 +9,8 @@ import random
 PORT = 8080
 HEADER = 64
 FORMAT = 'utf-8'
-SERVER = 'localhost'
-#SERVER = "0.0.0.0"
+#SERVER = 'localhost'
+SERVER = "0.0.0.0"
 ADDRESS = (SERVER, PORT)
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,7 +53,7 @@ server_data_socket.bind((SERVER, 5007))
 def send_server_data(connection2, address2, player_number):
     try:
         while True:
-            time.sleep(random.randint(20, 100) / 1000)
+            time.sleep(random.randint(20, 20) / 1000)
             connection2.sendto(pickle.dumps(players), (SERVER, 5007))
             #print('sent: ', players)
     except:
