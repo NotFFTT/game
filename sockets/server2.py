@@ -22,42 +22,45 @@ def handle_client(connection, address, player_number):
     global players
     
     while connected:
-        #message_length = connection.recv(HEADER).decode(FORMAT)
+        try:
+            #message_length = connection.recv(HEADER).decode(FORMAT)
 
-        #if message_length:
-        #msg_len = int(message_length)
-        msg = pickle.loads(connection.recv(2048))
+            #if message_length:
+            #msg_len = int(message_length)
+            msg = pickle.loads(connection.recv(2048))
 
-        if msg == 'SETUP':
-            #ADD NEW PLAYER
-            #players[player_number] = "0 0 0"
-            players[player_number] = f"{player_number * 100} 500 0 0 0 0"
-            connection.send(pickle.dumps(str(player_number)))   # TODO: do not send back data when setup if global received_list is used.
-            continue
-    
-        players[player_number] = msg
+            if msg == 'SETUP':
+                #ADD NEW PLAYER
+                #players[player_number] = "0 0 0"
+                players[player_number] = f"{player_number * 100} 500 0 0 0 0"
+                connection.send(pickle.dumps(str(player_number)))   # TODO: do not send back data when setup if global received_list is used.
+                continue
         
-        if msg == 'DISCONNECT':
-            #REMOVE PLAYER
-            #del players[player_number] # TODO: Uncomment when list actually works as a variable length list
-            players[player_number] = "550 550 0 0 0 0"
-            connection.close()
-            break
+            players[player_number] = msg
+            
+            if msg == 'DISCONNECT':
+                #REMOVE PLAYER
+                #del players[player_number] # TODO: Uncomment when list actually works as a variable length list
+                players[player_number] = "550 550 0 0 0 0"
+                connection.close()
+                break
 
-            #UPDATE PLAYER DATA
-            #connection.send(pickle.dumps(players))
+                #UPDATE PLAYER DATA
+                #connection.send(pickle.dumps(players))
+        except:
+            pass
 
 # https://stackoverflow.com/questions/603852/how-do-you-udp-multicast-in-python
 server_data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_data_socket.bind((SERVER, 5007))
 def send_server_data(connection2, address2, player_number):
-    try:
-        while True:
-            time.sleep(random.randint(20, 20) / 1000)
+    while True:
+        try:
+            time.sleep(random.randint(40, 40) / 1000)
             connection2.sendto(pickle.dumps(players), (SERVER, 5007))
             #print('sent: ', players)
-    except:
-        print('BrokenPipeError') # TODO: Make an actual exception.
+        except:
+            print('BrokenPipeError') # TODO: Make an actual exception.
 
 def start():
     server.listen(4)
