@@ -219,10 +219,10 @@ class Game(arcade.Window):
         
     def send(self, msg):
         message = pickle.dumps(msg)
-        msg_len = len(message)
-        send_length = str(msg_len).encode(FORMAT)
-        send_length += b' ' * (HEADER - len(send_length))
-        client.send(send_length)
+        # msg_len = len(message)
+        # send_length = str(msg_len).encode(FORMAT)
+        # send_length += b' ' * (HEADER - len(send_length))
+        # client.send(send_length)
         client.send(message)
 
 
@@ -233,7 +233,7 @@ class Game(arcade.Window):
         self.physics_engine.update()
         
         self.time1 = time.time()
-        # print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
+        print("TIME Loop around>>>>>>>>>", (self.time2 - self.time1))
         #time1
         self.send(f"{self.player.center_x} {self.player.center_y} {self.player.player_number}") # TODO: does send() have a timestamp for server to calculate projected x/y locations that it includes in its published received_list? TODO: necessary to deal with obsolete packets? UDP vs TCP.
         
@@ -243,7 +243,7 @@ class Game(arcade.Window):
         # ['0 0 0', '0 0 0']
         # print(received_list)
         self.time2 = time.time()
-        # print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
+        print("TIME Between S-R>>>>>>>>>", (self.time2 - self.time1))
         
         # update self.player2.center_x = whatever comes from socket
         #print(len(self.other_players_list), len(received_list))

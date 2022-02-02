@@ -21,32 +21,30 @@ def handle_client(connection, address, player_number):
     global players
     
     while connected:
-        message_length = connection.recv(HEADER).decode(FORMAT)
+        #message_length = connection.recv(HEADER).decode(FORMAT)
 
-        if message_length:
-            msg_len = int(message_length)
-            msg = pickle.loads(connection.recv(msg_len))
+        #if message_length:
+        #msg_len = int(message_length)
+        msg = pickle.loads(connection.recv(2048))
 
-            if msg == 'SETUP':
-                #ADD NEW PLAYER
-                #players[player_number] = "0 0 0"
-                players[player_number] = f"{player_number * 100} 500 0"
-                connection.send(pickle.dumps(str(player_number)))   # TODO: do not send back data when setup if global received_list is used.
-                continue
+        if msg == 'SETUP':
+            #ADD NEW PLAYER
+            #players[player_number] = "0 0 0"
+            players[player_number] = f"{player_number * 100} 500 0"
+            connection.send(pickle.dumps(str(player_number)))   # TODO: do not send back data when setup if global received_list is used.
+            continue
+    
+        players[player_number] = msg
         
-            players[player_number] = msg
-            
-            if msg == 'DISCONNECT':
-                #REMOVE PLAYER
-                #del players[player_number] # TODO: Uncomment when list actually works as a variable length list
-                players[player_number] = "550 550 0"
-                connection.close()
-                break
+        if msg == 'DISCONNECT':
+            #REMOVE PLAYER
+            #del players[player_number] # TODO: Uncomment when list actually works as a variable length list
+            players[player_number] = "550 550 0"
+            connection.close()
+            break
 
             #UPDATE PLAYER DATA
-            connection.send(pickle.dumps(players))
-
-    connection.close()
+            #connection.send(pickle.dumps(players))
 
 # https://stackoverflow.com/questions/603852/how-do-you-udp-multicast-in-python
 server_data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
