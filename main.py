@@ -12,17 +12,17 @@ from pyglet.gl.gl import GL_NEAREST # TODO: Uncomment when ready to add custom t
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 650
 SCREEN_TITLE = "MULTISHOOTER (please work)"
-PLAYER_MOVEMENT_SPEED = 5
+PLAYER_MOVEMENT_SPEED = 2
 
 
 PORT = 8080
 HEADER = 64
-#SERVER = "143.198.247.145"
-SERVER = 'localhost'
+SERVER = "143.198.247.145"
+#SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
-GRAVITY = 1
-PLAYER_JUMP_SPEED = 15
+GRAVITY = 0.2
+PLAYER_JUMP_SPEED = 5
 
 HEALTHBAR_WIDTH = 80
 HEALTHBAR_HEIGHT = 20
@@ -133,10 +133,9 @@ class Game(arcade.Window):
         self.clear()
         self.scene.draw(filter=GL_NEAREST) # TODO: Uncomment when ready to add custom tilemap.
         self.player.draw()
-
         self.other_players_list.draw()
 
-        player_name = "Player " + str(int(self.player.player_number) + 1)
+        #player_name = "Player " + str(int(self.player.player_number) + 1)
         arcade.draw_rectangle_filled(
             self.player.center_x,
             self.player.center_y + self.player.height/3,
@@ -145,7 +144,7 @@ class Game(arcade.Window):
             color=arcade.color.WHITE,
         )
         arcade.draw_text(
-            player_name,
+            "Player " + str(int(self.player.player_number) + 1),
             self.player.center_x - 115/2,
             self.player.center_y + self.player.height/3,
             arcade.color.BLACK,
@@ -269,19 +268,22 @@ class Game(arcade.Window):
                     self.player.center_x = 100
                     self.player.center_y = 160
                 pass
-            player.player_number = str(current[2])
 
             time_difference = (time.time_ns() - server_time)/1000/1000/1000
+
             player.center_x = server_center_x + time_difference * 2*server_change_x/delta_time
+            if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
+                player.center_x = server_center_x
+
             player.center_y = server_center_y + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
-            if arcade.check_for_collision_with_list(player, self.scene["floor"]):
+            if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
                 player.center_y = server_center_y
-            #player.change_x = server_change_x
-            #player.change_y = server_change_y
-            
-            player.texture = self.skins[str(current[2])]
+
             player.curr_health = 80 #TODO update from server
+            player.player_number = str(current[2])
             player.scale = 0.5
+            player.texture = self.skins[str(current[2])]
+
             index += 1
     
         self.other_players_list.update()
