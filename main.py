@@ -121,7 +121,6 @@ class Game(arcade.Window):
 
         self.other_players_list.draw()
 
-        
         player_name = "Player " + str(int(self.player.player_number) + 1)
         arcade.draw_rectangle_filled(
             self.player.center_x,
@@ -172,7 +171,6 @@ class Game(arcade.Window):
         send_length += b' ' * (HEADER - len(send_length))
         client.send(send_length)
         client.send(message)
-
 
     def on_update(self, delta_time):
         self.player.update()
