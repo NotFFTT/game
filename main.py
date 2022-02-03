@@ -374,7 +374,7 @@ class Game(arcade.View):
         self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
         self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
         self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
-        self.bg_music = arcade.load_sound("assets/sounds/bg_music.wav")
+        self.bg_music = arcade.load_sound("assets/sounds/2019-01-22_-_Ready_to_Fight_-_David_Fesliyan.wav")
         
     def setup(self):
 
