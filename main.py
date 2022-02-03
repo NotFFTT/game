@@ -381,7 +381,7 @@ class Game(arcade.View):
         # SETUP SCENE
         self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        arcade.play_sound(self.bg_music)
+        arcade.play_sound(self.bg_music, volume=0.5)
         
         # SETUP PLAYER
         self.send('SETUP')
