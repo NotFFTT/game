@@ -374,14 +374,15 @@ class Game(arcade.View):
         self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
         self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
         self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
-        
+        self.bg_music = arcade.load_sound("assets/sounds/bg_music.wav")
         
     def setup(self):
 
         # SETUP SCENE
         self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
-
+        arcade.play_sound(self.bg_music)
+        
         # SETUP PLAYER
         self.send('SETUP')
         player_number = pickle.loads(sending_socket.recv(2048))
