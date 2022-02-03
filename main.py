@@ -209,13 +209,13 @@ class Player(arcade.Sprite):
         }
 
         if self.player_number == 0:
-            self.character_type = "water"
-        elif self.player_number == 1:
             self.character_type = "fire"
+        elif self.player_number == 1:
+            self.character_type = "water"
         elif self.player_number == 2:
-            self.character_type = "earth"
-        elif self.player_number == 3:
             self.character_type = "wind"
+        elif self.player_number == 3:
+            self.character_type = "earth"
 
         idle = []
 
@@ -351,8 +351,8 @@ class TitleView(arcade.View):
 
     def on_mouse_press(self, _x, _y, _button, _modifiers ):
         game_view = Game()
-        game_view.setup()
         self.window.show_view(game_view)
+        game_view.setup()
 
 class Game(arcade.View):
     def __init__(self):
@@ -373,8 +373,7 @@ class Game(arcade.View):
         #LOAD SOUNDS
         self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
         self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
-        self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
-        
+        self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")  
         
     def setup(self):
 
@@ -423,7 +422,7 @@ class Game(arcade.View):
                 self.player.animation_start = time.time_ns()
         
         # QUIT
-        elif symbol == arcade.key.Q:
+        elif symbol == arcade.key.ESCAPE:
             self.send("DISCONNECT")
             arcade.exit()
             
