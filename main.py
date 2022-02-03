@@ -27,7 +27,7 @@ HEALTH_NUMBER_OFFSET_Y = -20
 PORT = 8080
 HEADER = 64
 SERVER = "143.198.247.145"
-#SERVER = 'localhost'
+# SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
@@ -103,9 +103,19 @@ class Player(arcade.Sprite):
         self.animation_start = time.time_ns()
         self.curr_health = max_health
         self.player_number = player_number
-        self.scale = 2
+        self.scale = 1
         self.center_x = -800
         self.center_y = -800
+
+
+        # if self.player_number == 0:
+        #     self.element = "fire"
+        # elif self.player_number == 1:
+        #     self.element = "earth"
+        # elif self.player_number == 2:
+        #     self.element = "water"
+        # elif self.player_number == 3:
+        #     self.element = "wizard"
 
         # idle = []
         # for i in range(6):
@@ -125,11 +135,11 @@ class Player(arcade.Sprite):
 
         idle = []
         for i in range(8):
-            idle.append(arcade.load_texture_pair(f"assets/fire/01_idle/idle_{i+1}.png"))
+            idle.append(arcade.load_texture_pair(f"assets/fire/idle/idle_{i+1}.png"))
 
         run = []
         for i in range(8):
-            run.append(arcade.load_texture_pair(f"assets/fire/02_run/run_{i+1}.png"))
+            run.append(arcade.load_texture_pair(f"assets/fire/run/run_{i+1}.png"))
             
         atk_1 = []
         for i in range(11):
@@ -141,21 +151,29 @@ class Player(arcade.Sprite):
 
         jump = []
         for i in range(20):
-            jump.append(arcade.load_texture_pair(f"assets/fire/03_jump/jump_{i+1}.png"))
+            jump.append(arcade.load_texture_pair(f"assets/fire/jump/jump_{i+1}.png"))
+            
+        death = []
+        for i in range(13):
+            death.append(arcade.load_texture_pair(f"assets/fire/11_death/death_{i+1}.png"))
 
         self.animation_cells = {
             'idle': idle,
             'run': run,
             'atk_1': atk_1,
             'sp_atk': sp_atk,
-            'jump': jump
+            'jump': jump,
+            'death': death,
         }
 
         self.texture = self.animation_cells['idle'][0][self.direction]
 
     def on_update(self, delta_time):
         self.update_animation(delta_time)
-        if abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk'):
+        if self.curr_health <= 0:
+                self.state = 'death'
+                self.animation_start = time.time_ns()
+        elif abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk'):
             self.state = 'jump'
         elif self.change_x > 0:
             if self.state != 'atk_1' and self.state != 'sp_atk':
@@ -165,9 +183,10 @@ class Player(arcade.Sprite):
             if self.state != 'atk_1' and self.state != 'sp_atk':
                 self.state = 'run'
                 self.direction = 1
-        else:
-            if self.state != 'atk_1' and self.state != 'sp_atk':
+        elif self.state != 'atk_1' and self.state != 'sp_atk':
                 self.state = 'idle'
+        
+            
 
     def update_animation(self, delta_time):
 
@@ -221,6 +240,13 @@ class Player(arcade.Sprite):
             else:
                 self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
                 self.set_hit_box(self.texture.hit_box_points)
+                
+        elif self.state == 'death':
+            number_of_frames = 13
+            total_animation_time = 1.5
+            time_now = time.time_ns()
+            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000
+            current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
 
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
@@ -238,11 +264,17 @@ class Game(arcade.Window):
         # NOT NEEDED - ONLY FOR DEV
         self.time1 = time.time()
         self.time2 = time.time()
+
+        #LOAD SOUNDS
+        self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
+        self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
+        self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
+        
         
     def setup(self):
 
         # SETUP SCENE
-        self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=1.5, use_spatial_hash=True)
+        self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
 
         # SETUP PLAYER
@@ -271,15 +303,18 @@ class Game(arcade.Window):
         elif symbol == arcade.key.UP or symbol == arcade.key.W or symbol == arcade.key.SPACE:
             if self.physics_engine.can_jump() and self.player.state != "sp_atk":
                 self.player.change_y = PLAYER_JUMP_SPEED
+                arcade.play_sound(self.male_jump)
                 self.physics_engine.increment_jump_counter()
                 
         # ATTACKS
         elif symbol == arcade.key.E:
             self.player.state = "atk_1"
+            arcade.play_sound(self.sword_sound)
             self.player.animation_start = time.time_ns()
         elif symbol == arcade.key.R:
             if self.player.change_y == 0:
                 self.player.state = "sp_atk"
+                arcade.play_sound(self.sword_attack)
                 self.player.animation_start = time.time_ns()
         
         # QUIT
