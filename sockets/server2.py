@@ -61,7 +61,8 @@ def handle_client(connection, address, player_number):
     global players
     
     error_counter = 0
-    while error_counter < 5:
+    max_error_count = 5
+    while error_counter <= max_error_count:
         try:
             msg = pickle.loads(connection.recv(2048))
 
@@ -81,16 +82,20 @@ def handle_client(connection, address, player_number):
 
         except Exception as e:
             error_counter += 1
-            connection.close()
+            if error_counter > max_error_count:
+                connection.close()
             print("handle_client error: ", error_counter, e)
             pass
+    if error_counter > max_error_count:
+        connection.close()
 
 sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 sending_socket.bind((SERVER, 5007))
 def send_server_data(connection2, address2, player_number):
     error_counter = 0
-    while error_counter < 5:
+    max_error_count = 5
+    while error_counter <= 5:
         try:
             time.sleep(random.randint(40, 40) / 1000)
             connection2.sendto(pickle.dumps(players), (SERVER, 5007))
@@ -99,9 +104,12 @@ def send_server_data(connection2, address2, player_number):
                 error_counter = 0
         except Exception as e:
             error_counter += 1
-            connection2.close()
+            if error_counter > max_error_count:
+                connection2.close()
             print("send_server_data error: ", error_counter, e)
             pass
+    if error_counter > max_error_count:
+        connection2.close()
 
 def start():
     receiving_socket.listen(4)

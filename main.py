@@ -27,7 +27,7 @@ HEALTH_NUMBER_OFFSET_Y = -20
 PORT = 8080
 HEADER = 64
 SERVER = "143.198.247.145"
-#SERVER = 'localhost'
+# SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
@@ -133,29 +133,115 @@ class Player(arcade.Sprite):
         # for i in range(25):
         #      sp_atk.append(arcade.load_texture_pair(f"assets/earth/sp_atk/sp_atk_{i+1}.png"))
 
+        self.sprite_info = {
+            "water": {
+                "width": 224,
+                "height": 112,
+
+                "idle_qty": 8,
+                "run_qty": 10,
+                "atk_1_qty": 7,
+                "sp_atk_qty": 27,
+                "jump_qty": 2,
+                "death_qty": 16,
+
+                "idle_row": 0,
+                "run_row": 1,
+                "atk_1_row": 6,
+                "sp_atk_row": 8,
+                "jump_row": 3,
+                "death_row": 13,
+            },
+            "fire": {
+                "width": 224,
+                "height": 112,
+
+                "idle_qty": 8,
+                "run_qty": 8,
+                "atk_1_qty": 11,
+                "sp_atk_qty": 18,
+                "jump_qty": 2,
+                "death_qty": 13,
+
+                "idle_row": 0,
+                "run_row": 1,
+                "atk_1_row": 6,
+                "sp_atk_row": 9,
+                "jump_row": 3,
+                "death_row": 12,
+            },
+            "earth": {
+                "width": 288,
+                "height": 128,
+
+                "idle_qty": 6,
+                "run_qty": 8,
+                "atk_1_qty": 6,
+                "sp_atk_qty": 25,
+                "jump_qty": 2,
+                "death_qty": 14,
+
+                "idle_row": 0,
+                "run_row": 1,
+                "atk_1_row": 4,
+                "sp_atk_row": 7,
+                "jump_row": 3,
+                "death_row": 12,
+            },
+            "wind": {
+                "width": 224,
+                "height": 112,
+
+                "idle_qty": 8,
+                "run_qty": 8,
+                "atk_1_qty": 8,
+                "sp_atk_qty": 30,
+                "jump_qty": 2,
+                "death_qty": 12,
+
+                "idle_row": 0,
+                "run_row": 1,
+                "atk_1_row": 5,
+                "sp_atk_row": 8,
+                "jump_row": 3,
+                "death_row": 11,
+            },
+        }
+
+        if self.player_number == 0:
+            self.character_type = "water"
+        elif self.player_number == 1:
+            self.character_type = "fire"
+        elif self.player_number == 2:
+            self.character_type = "earth"
+        elif self.player_number == 3:
+            self.character_type = "wind"
+
         idle = []
-        for i in range(8):
-            idle.append(arcade.load_texture_pair(f"assets/fire/idle/idle_{i+1}.png"))
+
+        for i in range(self.sprite_info[self.character_type]["idle_qty"]):
+            idle.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["idle_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
 
         run = []
-        for i in range(8):
-            run.append(arcade.load_texture_pair(f"assets/fire/run/run_{i+1}.png"))
-            
+        for i in range(self.sprite_info[self.character_type]["run_qty"]):
+            run.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["run_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
+
         atk_1 = []
-        for i in range(11):
-             atk_1.append(arcade.load_texture_pair(f"assets/fire/05_1_atk/1_atk_{i+1}.png"))
-        
+        for i in range(self.sprite_info[self.character_type]["atk_1_qty"]):
+             atk_1.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["atk_1_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
+
         sp_atk = []
-        for i in range(28):
-             sp_atk.append(arcade.load_texture_pair(f"assets/fire/07_3_atk/3_atk_{i+1}.png"))
+        for i in range(self.sprite_info[self.character_type]["sp_atk_qty"]):
+             sp_atk.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["sp_atk_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
 
         jump = []
-        for i in range(20):
-            jump.append(arcade.load_texture_pair(f"assets/fire/jump/jump_{i+1}.png"))
-            
+
+        for i in range(self.sprite_info[self.character_type]["jump_qty"]):
+            jump.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=0, y=(self.sprite_info[self.character_type]["jump_row"] + i)*self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
+
         death = []
-        for i in range(13):
-            death.append(arcade.load_texture_pair(f"assets/fire/11_death/death_{i+1}.png"))
+        for i in range(self.sprite_info[self.character_type]["death_qty"]):
+            death.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["death_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
 
         self.animation_cells = {
             'idle': idle,
@@ -167,6 +253,12 @@ class Player(arcade.Sprite):
         }
 
         self.texture = self.animation_cells['idle'][0][self.direction]
+
+    def load_texture_pair_modified(self, filename, x, y, width, height, hit_box_algorithm: str = "Simple"):
+        return [
+            arcade.load_texture(filename, x, y, width, height, hit_box_algorithm=hit_box_algorithm),
+            arcade.load_texture(filename, x, y, width, height, flipped_horizontally=True, hit_box_algorithm=hit_box_algorithm)
+        ]
 
     def on_update(self, delta_time):
         self.update_animation(delta_time)
@@ -192,13 +284,13 @@ class Player(arcade.Sprite):
 
         if self.state == 'jump':
             if self.change_y > 0:
-                self.texture = self.animation_cells[self.state][5][self.direction]
+                self.texture = self.animation_cells[self.state][0][self.direction]
             if self.change_y < 0:
-                self.texture = self.animation_cells[self.state][15][self.direction]
+                self.texture = self.animation_cells[self.state][1][self.direction]
             #self.set_hit_box(self.texture.hit_box_points)
 
         if self.state == 'idle':
-            number_of_frames = 8
+            number_of_frames = self.sprite_info[self.character_type]["idle_qty"]
             total_animation_time = .5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
@@ -207,7 +299,7 @@ class Player(arcade.Sprite):
             #self.set_hit_box(self.texture.hit_box_points)
 
         if self.state == 'run':
-            number_of_frames = 8
+            number_of_frames = self.sprite_info[self.character_type]["run_qty"]
             total_animation_time = .5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
@@ -216,7 +308,7 @@ class Player(arcade.Sprite):
             #self.set_hit_box(self.texture.hit_box_points)
 
         elif self.state == "atk_1":
-            number_of_frames = 11
+            number_of_frames = self.sprite_info[self.character_type]["atk_1_qty"]
             total_animation_time = .5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
@@ -229,7 +321,7 @@ class Player(arcade.Sprite):
                 self.set_hit_box(self.texture.hit_box_points)
 
         elif self.state == 'sp_atk':
-            number_of_frames = 28
+            number_of_frames = self.sprite_info[self.character_type]["sp_atk_qty"]
             total_animation_time = 1.5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
@@ -242,7 +334,7 @@ class Player(arcade.Sprite):
                 self.set_hit_box(self.texture.hit_box_points)
                 
         elif self.state == 'death':
-            number_of_frames = 13
+            number_of_frames = self.sprite_info[self.character_type]["death_qty"]
             total_animation_time = 1.5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000
