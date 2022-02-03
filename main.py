@@ -6,13 +6,13 @@ import pickle
 import time
 import threading
 from pyglet.gl.gl import GL_NEAREST
+import sys
 
 # GAME
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 650
 SCREEN_TITLE = "MULTISHOOTER (please work)"
 GRAVITY = 0.2
-
 
 # PLAYER
 PLAYER_MOVEMENT_SPEED = 2
@@ -23,24 +23,23 @@ HEALTHBAR_OFFSET_Y = -10
 HEALTH_NUMBER_OFFSET_X = -20
 HEALTH_NUMBER_OFFSET_Y = -20
 
-
 # SERVER
 PORT = 8080
 HEADER = 64
-#SERVER = "143.198.247.145"
-SERVER = 'localhost'
+SERVER = "143.198.247.145"
+#SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
-
-
 # socket
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(ADDRESS)
+sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+sending_socket.connect(ADDRESS)
 
 # 2nd UDP socket to receive data from server's multicasted server_data.
-server_data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_data_socket.connect((SERVER, 5007))
+receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+receiving_socket.connect((SERVER, 5007))
 received_list = {
     0: {
         "x": 111,
@@ -80,11 +79,19 @@ received_list = {
     },
 }
 def get_server_data():
-    #print('hi')
     while True:
         global received_list
-        received_list = pickle.loads(server_data_socket.recv(2048))
-        # print('received message: ', received_list)
+        try:
+            received = receiving_socket.recv(2048)
+            print(sys.getsizeof(received))
+            data = pickle.loads(received)
+            if isinstance(data, dict) and set(data.keys()) == {0, 1, 2, 3}:
+                received_list = data
+            else:
+                print("Data not in expected format in get_server_data: ", data)
+        except Exception as e:
+            print("get_server_data error, received data:", e)
+            pass
 
 
 class Player(arcade.Sprite):
@@ -100,47 +107,111 @@ class Player(arcade.Sprite):
         self.center_x = -800
         self.center_y = -800
 
+        # idle = []
+        # for i in range(6):
+        #     idle.append(arcade.load_texture_pair(f"assets/earth/idle/idle_{i+1}.png"))
+
+        # run = []
+        # for i in range(8):
+        #     run.append(arcade.load_texture_pair(f"assets/earth/run/run_{i+1}.png"))
+            
+        # atk_1 = []
+        # for i in range(6):
+        #      atk_1.append(arcade.load_texture_pair(f"assets/earth/1_atk/1_atk_{i+1}.png"))
+        
+        # sp_atk = []
+        # for i in range(25):
+        #      sp_atk.append(arcade.load_texture_pair(f"assets/earth/sp_atk/sp_atk_{i+1}.png"))
+
         idle = []
-        for i in range(6):
-            idle.append(arcade.load_texture_pair(f"assets/earth/idle/idle_{i+1}.png"))
+        for i in range(8):
+            idle.append(arcade.load_texture_pair(f"assets/fire/01_idle/idle_{i+1}.png"))
 
         run = []
         for i in range(8):
-            run.append(arcade.load_texture_pair(f"assets/earth/run/run_{i+1}.png"))
+            run.append(arcade.load_texture_pair(f"assets/fire/02_run/run_{i+1}.png"))
             
         atk_1 = []
-        for i in range(6):
-             atk_1.append(arcade.load_texture_pair(f"assets/earth/1_atk/1_atk_{i+1}.png"))
+        for i in range(11):
+             atk_1.append(arcade.load_texture_pair(f"assets/fire/05_1_atk/1_atk_{i+1}.png"))
+        
+        sp_atk = []
+        for i in range(28):
+             sp_atk.append(arcade.load_texture_pair(f"assets/fire/07_3_atk/3_atk_{i+1}.png"))
+
+        jump = []
+        for i in range(20):
+            jump.append(arcade.load_texture_pair(f"assets/fire/03_jump/jump_{i+1}.png"))
 
         self.animation_cells = {
             'idle': idle,
             'run': run,
-            "atk_1": atk_1,
+            'atk_1': atk_1,
+            'sp_atk': sp_atk,
+            'jump': jump
         }
 
         self.texture = self.animation_cells['idle'][0][self.direction]
 
     def on_update(self, delta_time):
         self.update_animation(delta_time)
-        if self.change_x > 0:
-            self.direction = 0
-        if self.change_x < 0:
-            self.direction = 1
+        if abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk'):
+            self.state = 'jump'
+        elif self.change_x > 0:
+            if self.state != 'atk_1' and self.state != 'sp_atk':
+                self.state = 'run'
+                self.direction = 0
+        elif self.change_x < 0:
+            if self.state != 'atk_1' and self.state != 'sp_atk':
+                self.state = 'run'
+                self.direction = 1
+        else:
+            if self.state != 'atk_1' and self.state != 'sp_atk':
+                self.state = 'idle'
 
     def update_animation(self, delta_time):
 
+        if self.state == 'jump':
+            if self.change_y > 0:
+                self.texture = self.animation_cells[self.state][5][self.direction]
+            if self.change_y < 0:
+                self.texture = self.animation_cells[self.state][15][self.direction]
+            #self.set_hit_box(self.texture.hit_box_points)
+
         if self.state == 'idle':
-            number_of_frames = 6
+            number_of_frames = 8
             total_animation_time = .5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-            self.set_hit_box(self.texture.hit_box_points)
+            #self.set_hit_box(self.texture.hit_box_points)
+
+        if self.state == 'run':
+            number_of_frames = 8
+            total_animation_time = .5
+            time_now = time.time_ns()
+            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
+            current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
+            self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
+            #self.set_hit_box(self.texture.hit_box_points)
 
         elif self.state == "atk_1":
-            number_of_frames = 6
+            number_of_frames = 11
             total_animation_time = .5
+            time_now = time.time_ns()
+            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
+            current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
+
+            if current_animation_frame + 1 > number_of_frames:
+                self.state = "idle"
+            else:
+                self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
+                self.set_hit_box(self.texture.hit_box_points)
+
+        elif self.state == 'sp_atk':
+            number_of_frames = 28
+            total_animation_time = 1.5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
@@ -176,7 +247,7 @@ class Game(arcade.Window):
 
         # SETUP PLAYER
         self.send('SETUP')
-        player_number = pickle.loads(client.recv(2048))
+        player_number = pickle.loads(sending_socket.recv(2048))
         self.player = Player(player_number=player_number) 
 
         # SETUP OTHER PLAYERS
@@ -188,16 +259,17 @@ class Game(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
         self.physics_engine.enable_multi_jump(2)
 
-
     def on_key_press(self, symbol: int, modifiers: int):
 
         # DIRECTIONAL
         if symbol == arcade.key.RIGHT or symbol == arcade.key.D:
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
+            if self.player.state != "sp_atk":
+                self.player.change_x = PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
-            self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
+            if self.player.state != "sp_atk":
+                self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.UP or symbol == arcade.key.W or symbol == arcade.key.SPACE:
-            if self.physics_engine.can_jump():
+            if self.physics_engine.can_jump() and self.player.state != "sp_atk":
                 self.player.change_y = PLAYER_JUMP_SPEED
                 self.physics_engine.increment_jump_counter()
                 
@@ -205,6 +277,10 @@ class Game(arcade.Window):
         elif symbol == arcade.key.E:
             self.player.state = "atk_1"
             self.player.animation_start = time.time_ns()
+        elif symbol == arcade.key.R:
+            if self.player.change_y == 0:
+                self.player.state = "sp_atk"
+                self.player.animation_start = time.time_ns()
         
         # QUIT
         elif symbol == arcade.key.Q:
@@ -218,7 +294,6 @@ class Game(arcade.Window):
         elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
             self.player.change_x = 0
         
-
     def on_draw(self):
 
         # Draw the scene
@@ -227,7 +302,7 @@ class Game(arcade.Window):
 
         # Draw client player
         self.player.draw()
-        self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
+        #self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
 
         # Draw other players
         for player in self.other_players_list:
@@ -318,7 +393,7 @@ class Game(arcade.Window):
         
     def send(self, msg):
         message = pickle.dumps(msg)
-        client.send(message)
+        sending_socket.send(message)
 
     def on_update(self, delta_time):
         self.player.update()
@@ -341,11 +416,13 @@ class Game(arcade.Window):
         index = 0
 
         for player in self.other_players_list:
+            
             server_center_x = float(received_list[index]["x"])
             server_center_y = float(received_list[index]["y"])
             server_change_x = float(received_list[index]["vx"])
             server_change_y = float(received_list[index]["vy"])
             server_time = int(received_list[index]["t"])
+            server_state = str(received_list[index]["st"])
 
             player.player_number = index
         
@@ -355,58 +432,27 @@ class Game(arcade.Window):
                     self.player.center_x = 100
                     self.player.center_y = 160
             else:
+                prev_state = player.state
+                player.state = server_state
+                if prev_state != player.state and (server_state == 'atk_1' or server_state == 'sp_atk'):
+                    player.animation_start = time.time_ns()
+
                 time_difference = (time.time_ns() - server_time)/1000/1000/1000
 
-                player.center_x = server_center_x + time_difference * 2*server_change_x/delta_time
+                player.center_x = server_center_x# + time_difference * 2*server_change_x/delta_time # TODO: This prediction depends on client's clocks being synced and consistent epoch. 
                 if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
                     player.center_x = server_center_x
 
-                player.center_y = server_center_y + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
+                player.center_y = server_center_y# + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
                 if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
                     player.center_y = server_center_y
+
+                player.change_x = server_change_x
+                player.change_y = server_change_y
 
                 player.set_hit_box(player.texture.hit_box_points)
             
             # Update damage to all players including client based on damage in recieved_data from server.
-
-# players = {
-#     0: {
-#         "x": 111,
-#         "y": 500,
-#         "vx": 0, # change_x
-#         "vy": 0, # change_y
-#         "t": 0, # time
-#         "dam": [0,0,0,0], # damage
-#         "st": 0, # state 
-#     },
-#     1: {
-#         "x": 110,
-#         "y": 555,
-#         "vx": 0,
-#         "vy": 0,
-#         "t": 0,
-#         "dam": [0,0,0,0],
-#         "st": 0
-#     },
-#     2: {
-#         "x": 120,
-#         "y": 555,
-#         "vx": 0,
-#         "vy": 0,
-#         "t": 0,
-#         "dam": [0,0,0,0],
-#         "st": 0
-#     },
-#     3: { 
-#         "x": 110,
-#         "y": 545,
-#         "vx": 0,
-#         "vy": 0,
-#         "t": 0,
-#         "dam": [0,0,0,0],
-#         "st": 0,
-#     },
-# }
             for key, value in received_list.items():
                 if index == self.player.player_number:
                     self.player.curr_health -= value["dam"][index]
@@ -427,6 +473,7 @@ class Game(arcade.Window):
                     continue # TODO: kill player
 
         self.other_players_list.update()
+        self.other_players_list.on_update()
 
        
 def main():
