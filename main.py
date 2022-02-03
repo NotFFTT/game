@@ -13,7 +13,6 @@ SCREEN_HEIGHT = 650
 SCREEN_TITLE = "MULTISHOOTER (please work)"
 GRAVITY = 0.2
 
-
 # PLAYER
 PLAYER_MOVEMENT_SPEED = 2
 PLAYER_JUMP_SPEED = 5
@@ -23,16 +22,13 @@ HEALTHBAR_OFFSET_Y = -10
 HEALTH_NUMBER_OFFSET_X = -20
 HEALTH_NUMBER_OFFSET_Y = -20
 
-
 # SERVER
 PORT = 8080
 HEADER = 64
-#SERVER = "143.198.247.145"
-SERVER = 'localhost'
+SERVER = "143.198.247.145"
+#SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
-
-
 
 # socket
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -80,11 +76,17 @@ received_list = {
     },
 }
 def get_server_data():
-    #print('hi')
     while True:
         global received_list
-        received_list = pickle.loads(server_data_socket.recv(2048))
-        # print('received message: ', received_list)
+        try:
+            data = pickle.loads(server_data_socket.recv(2048))
+            if isinstance(data, dict) and set(data.keys()) == {0, 1, 2, 3}:
+                received_list = data
+            else:
+                print("Data not in expected format in get_server_data: ", data)
+        except Exception as e:
+            print("get_server_data error, received data:", e)
+            pass
 
 
 class Player(arcade.Sprite):
@@ -218,7 +220,6 @@ class Game(arcade.Window):
         elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
             self.player.change_x = 0
         
-
     def on_draw(self):
 
         # Draw the scene
@@ -227,7 +228,7 @@ class Game(arcade.Window):
 
         # Draw client player
         self.player.draw()
-        self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
+        #self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
 
         # Draw other players
         for player in self.other_players_list:
@@ -368,45 +369,6 @@ class Game(arcade.Window):
                 player.set_hit_box(player.texture.hit_box_points)
             
             # Update damage to all players including client based on damage in recieved_data from server.
-
-# players = {
-#     0: {
-#         "x": 111,
-#         "y": 500,
-#         "vx": 0, # change_x
-#         "vy": 0, # change_y
-#         "t": 0, # time
-#         "dam": [0,0,0,0], # damage
-#         "st": 0, # state 
-#     },
-#     1: {
-#         "x": 110,
-#         "y": 555,
-#         "vx": 0,
-#         "vy": 0,
-#         "t": 0,
-#         "dam": [0,0,0,0],
-#         "st": 0
-#     },
-#     2: {
-#         "x": 120,
-#         "y": 555,
-#         "vx": 0,
-#         "vy": 0,
-#         "t": 0,
-#         "dam": [0,0,0,0],
-#         "st": 0
-#     },
-#     3: { 
-#         "x": 110,
-#         "y": 545,
-#         "vx": 0,
-#         "vy": 0,
-#         "t": 0,
-#         "dam": [0,0,0,0],
-#         "st": 0,
-#     },
-# }
             for key, value in received_list.items():
                 if index == self.player.player_number:
                     self.player.curr_health -= value["dam"][index]
