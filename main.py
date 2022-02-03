@@ -107,21 +107,37 @@ class Player(arcade.Sprite):
         self.center_x = -800
         self.center_y = -800
 
+        # idle = []
+        # for i in range(6):
+        #     idle.append(arcade.load_texture_pair(f"assets/earth/idle/idle_{i+1}.png"))
+
+        # run = []
+        # for i in range(8):
+        #     run.append(arcade.load_texture_pair(f"assets/earth/run/run_{i+1}.png"))
+            
+        # atk_1 = []
+        # for i in range(6):
+        #      atk_1.append(arcade.load_texture_pair(f"assets/earth/1_atk/1_atk_{i+1}.png"))
+        
+        # sp_atk = []
+        # for i in range(25):
+        #      sp_atk.append(arcade.load_texture_pair(f"assets/earth/sp_atk/sp_atk_{i+1}.png"))
+
         idle = []
-        for i in range(6):
-            idle.append(arcade.load_texture_pair(f"assets/earth/idle/idle_{i+1}.png"))
+        for i in range(8):
+            idle.append(arcade.load_texture_pair(f"assets/fire/01_idle/idle_{i+1}.png"))
 
         run = []
         for i in range(8):
-            run.append(arcade.load_texture_pair(f"assets/earth/run/run_{i+1}.png"))
+            run.append(arcade.load_texture_pair(f"assets/fire/02_run/run_{i+1}.png"))
             
         atk_1 = []
-        for i in range(6):
-             atk_1.append(arcade.load_texture_pair(f"assets/earth/1_atk/1_atk_{i+1}.png"))
+        for i in range(11):
+             atk_1.append(arcade.load_texture_pair(f"assets/fire/05_1_atk/1_atk_{i+1}.png"))
         
         sp_atk = []
-        for i in range(25):
-             sp_atk.append(arcade.load_texture_pair(f"assets/earth/sp_atk/sp_atk_{i+1}.png"))
+        for i in range(28):
+             sp_atk.append(arcade.load_texture_pair(f"assets/fire/07_3_atk/3_atk_{i+1}.png"))
 
         self.animation_cells = {
             'idle': idle,
