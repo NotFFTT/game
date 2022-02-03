@@ -229,7 +229,6 @@ class Game(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
         self.physics_engine.enable_multi_jump(2)
 
-
     def on_key_press(self, symbol: int, modifiers: int):
 
         # DIRECTIONAL
@@ -387,11 +386,13 @@ class Game(arcade.Window):
         index = 0
 
         for player in self.other_players_list:
+            
             server_center_x = float(received_list[index]["x"])
             server_center_y = float(received_list[index]["y"])
             server_change_x = float(received_list[index]["vx"])
             server_change_y = float(received_list[index]["vy"])
             server_time = int(received_list[index]["t"])
+            server_state = str(received_list[index]["st"])
 
             player.player_number = index
         
@@ -401,6 +402,11 @@ class Game(arcade.Window):
                     self.player.center_x = 100
                     self.player.center_y = 160
             else:
+                prev_state = player.state
+                player.state = server_state
+                if prev_state != player.state and (server_state == 'atk_1' or server_state == 'sp_atk'):
+                    player.animation_start = time.time_ns()
+
                 time_difference = (time.time_ns() - server_time)/1000/1000/1000
 
                 player.center_x = server_center_x# + time_difference * 2*server_change_x/delta_time # TODO: This prediction depends on client's clocks being synced and consistent epoch. 
@@ -437,6 +443,7 @@ class Game(arcade.Window):
                     continue # TODO: kill player
 
         self.other_players_list.update()
+        self.other_players_list.on_update()
 
        
 def main():
