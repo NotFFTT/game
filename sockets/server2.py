@@ -9,14 +9,53 @@ import random
 PORT = 8080
 HEADER = 64
 FORMAT = 'utf-8'
-#SERVER = 'localhost'
-SERVER = "0.0.0.0"
+SERVER = 'localhost'
+#SERVER = "0.0.0.0"
 ADDRESS = (SERVER, PORT)
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDRESS)
 
-players = ["111 500 0 0 0 0", "110 555 0 0 0 0", "220 500 0 0 0 0", "10 500 0 0 0 0"]
+players = {
+    0: {
+        "x": 111,
+        "y": 500,
+        "vx": 0, # change_x
+        "vy": 0, # change_y
+        "t": 0, # time
+        "dam": [0,0,0,0], # damage
+        "st": 0, # state 
+    },
+    1: {
+        "x": 110,
+        "y": 555,
+        "vx": 0,
+        "vy": 0,
+        "t": 0,
+        "dam": [0,0,0,0],
+        "st": 0
+    },
+    2: {
+        "x": 120,
+        "y": 555,
+        "vx": 0,
+        "vy": 0,
+        "t": 0,
+        "dam": [0,0,0,0],
+        "st": 0
+    },
+    3: { 
+        "x": 110,
+        "y": 545,
+        "vx": 0,
+        "vy": 0,
+        "t": 0,
+        "dam": [0,0,0,0],
+        "st": 0,
+    },
+}
+
+# ["111 500 0 0 0 0", "110 555 0 0 0 0", "220 500 0 0 0 0", "10 500 0 0 0 0"]
 def handle_client(connection, address, player_number):
     connected = True
     global players
@@ -32,8 +71,8 @@ def handle_client(connection, address, player_number):
             if msg == 'SETUP':
                 #ADD NEW PLAYER
                 #players[player_number] = "0 0 0"
-                players[player_number] = f"{player_number * 100} 500 0 0 0 0"
-                connection.send(pickle.dumps(str(player_number)))   # TODO: do not send back data when setup if global received_list is used.
+                #players[player_number] = f"{player_number * 100} 500 0 0 0 0"
+                connection.send(pickle.dumps(player_number))   # TODO: do not send back data when setup if global received_list is used.
                 continue
         
             players[player_number] = msg
