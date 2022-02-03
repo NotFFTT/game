@@ -139,39 +139,53 @@ class Player(arcade.Sprite):
         for i in range(28):
              sp_atk.append(arcade.load_texture_pair(f"assets/fire/07_3_atk/3_atk_{i+1}.png"))
 
+        jump = []
+        for i in range(20):
+            jump.append(arcade.load_texture_pair(f"assets/fire/03_jump/jump_{i+1}.png"))
+
         self.animation_cells = {
             'idle': idle,
             'run': run,
             'atk_1': atk_1,
             'sp_atk': sp_atk,
+            'jump': jump
         }
 
         self.texture = self.animation_cells['idle'][0][self.direction]
 
     def on_update(self, delta_time):
         self.update_animation(delta_time)
-        if self.change_x > 0:
-            self.direction = 0
+        if abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk'):
+            self.state = 'jump'
+        elif self.change_x > 0:
             if self.state != 'atk_1' and self.state != 'sp_atk':
                 self.state = 'run'
+                self.direction = 0
         elif self.change_x < 0:
-            self.direction = 1
             if self.state != 'atk_1' and self.state != 'sp_atk':
                 self.state = 'run'
-        elif self.change_x == 0 and self.change_y == 0:
+                self.direction = 1
+        else:
             if self.state != 'atk_1' and self.state != 'sp_atk':
                 self.state = 'idle'
 
     def update_animation(self, delta_time):
 
+        if self.state == 'jump':
+            if self.change_y > 0:
+                self.texture = self.animation_cells[self.state][5][self.direction]
+            if self.change_y < 0:
+                self.texture = self.animation_cells[self.state][15][self.direction]
+            #self.set_hit_box(self.texture.hit_box_points)
+
         if self.state == 'idle':
-            number_of_frames = 6
+            number_of_frames = 8
             total_animation_time = .5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-            self.set_hit_box(self.texture.hit_box_points)
+            #self.set_hit_box(self.texture.hit_box_points)
 
         if self.state == 'run':
             number_of_frames = 8
@@ -180,10 +194,10 @@ class Player(arcade.Sprite):
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-            self.set_hit_box(self.texture.hit_box_points)
+            #self.set_hit_box(self.texture.hit_box_points)
 
         elif self.state == "atk_1":
-            number_of_frames = 6
+            number_of_frames = 11
             total_animation_time = .5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
@@ -196,7 +210,7 @@ class Player(arcade.Sprite):
                 self.set_hit_box(self.texture.hit_box_points)
 
         elif self.state == 'sp_atk':
-            number_of_frames = 25
+            number_of_frames = 28
             total_animation_time = 1.5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
