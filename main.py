@@ -118,11 +118,16 @@ class Player(arcade.Sprite):
         atk_1 = []
         for i in range(6):
              atk_1.append(arcade.load_texture_pair(f"assets/earth/1_atk/1_atk_{i+1}.png"))
+        
+        sp_atk = []
+        for i in range(25):
+             sp_atk.append(arcade.load_texture_pair(f"assets/earth/sp_atk/sp_atk_{i+1}.png"))
 
         self.animation_cells = {
             'idle': idle,
             'run': run,
-            "atk_1": atk_1,
+            'atk_1': atk_1,
+            'sp_atk': sp_atk,
         }
 
         self.texture = self.animation_cells['idle'][0][self.direction]
@@ -131,8 +136,15 @@ class Player(arcade.Sprite):
         self.update_animation(delta_time)
         if self.change_x > 0:
             self.direction = 0
-        if self.change_x < 0:
+            if self.state != 'atk_1' and self.state != 'sp_atk':
+                self.state = 'run'
+        elif self.change_x < 0:
             self.direction = 1
+            if self.state != 'atk_1' and self.state != 'sp_atk':
+                self.state = 'run'
+        elif self.change_x == 0 and self.change_y == 0:
+            if self.state != 'atk_1' and self.state != 'sp_atk':
+                self.state = 'idle'
 
     def update_animation(self, delta_time):
 
@@ -145,9 +157,31 @@ class Player(arcade.Sprite):
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
             self.set_hit_box(self.texture.hit_box_points)
 
+        if self.state == 'run':
+            number_of_frames = 8
+            total_animation_time = .5
+            time_now = time.time_ns()
+            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
+            current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
+            self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
+            self.set_hit_box(self.texture.hit_box_points)
+
         elif self.state == "atk_1":
             number_of_frames = 6
             total_animation_time = .5
+            time_now = time.time_ns()
+            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
+            current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
+
+            if current_animation_frame + 1 > number_of_frames:
+                self.state = "idle"
+            else:
+                self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
+                self.set_hit_box(self.texture.hit_box_points)
+
+        elif self.state == 'sp_atk':
+            number_of_frames = 25
+            total_animation_time = 1.5
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
@@ -200,11 +234,13 @@ class Game(arcade.Window):
 
         # DIRECTIONAL
         if symbol == arcade.key.RIGHT or symbol == arcade.key.D:
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
+            if self.player.state != "sp_atk":
+                self.player.change_x = PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
-            self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
+            if self.player.state != "sp_atk":
+                self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
         elif symbol == arcade.key.UP or symbol == arcade.key.W or symbol == arcade.key.SPACE:
-            if self.physics_engine.can_jump():
+            if self.physics_engine.can_jump() and self.player.state != "sp_atk":
                 self.player.change_y = PLAYER_JUMP_SPEED
                 self.physics_engine.increment_jump_counter()
                 
@@ -212,6 +248,10 @@ class Game(arcade.Window):
         elif symbol == arcade.key.E:
             self.player.state = "atk_1"
             self.player.animation_start = time.time_ns()
+        elif symbol == arcade.key.R:
+            if self.player.change_y == 0:
+                self.player.state = "sp_atk"
+                self.player.animation_start = time.time_ns()
         
         # QUIT
         elif symbol == arcade.key.Q:
