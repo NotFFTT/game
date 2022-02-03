@@ -1,3 +1,5 @@
+from ast import Pass
+from locale import currency
 import arcade
 import socket
 import pickle
@@ -25,8 +27,8 @@ HEALTH_NUMBER_OFFSET_Y = -20
 # SERVER
 PORT = 8080
 HEADER = 64
-SERVER = "143.198.247.145"
-#SERVER = 'localhost'
+#SERVER = "143.198.247.145"
+SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
@@ -39,7 +41,44 @@ client.connect(ADDRESS)
 # 2nd UDP socket to receive data from server's multicasted server_data.
 server_data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_data_socket.connect((SERVER, 5007))
-received_list = ["111 500 0 0 0 0", "110 555 0 0 0 0", "220 500 0 0 0 0", "10 500 0 0 0 0"]
+received_list = {
+    0: {
+        "x": 111,
+        "y": 500,
+        "vx": 0, # change_x
+        "vy": 0, # change_y
+        "t": 0, # time
+        "dam": [0,0,0,0], # damage
+        "st": 0, # state 
+    },
+    1: {
+        "x": 110,
+        "y": 555,
+        "vx": 0,
+        "vy": 0,
+        "t": 0,
+        "dam": [0,0,0,0],
+        "st": 0
+    },
+    2: {
+        "x": 120,
+        "y": 555,
+        "vx": 0,
+        "vy": 0,
+        "t": 0,
+        "dam": [0,0,0,0],
+        "st": 0
+    },
+    3: { 
+        "x": 110,
+        "y": 545,
+        "vx": 0,
+        "vy": 0,
+        "t": 0,
+        "dam": [0,0,0,0],
+        "st": 0,
+    },
+}
 def get_server_data():
     #print('hi')
     while True:
@@ -58,8 +97,8 @@ class Player(arcade.Sprite):
         self.curr_health = max_health
         self.player_number = player_number
         self.scale = 2
-        self.center_x = 100
-        self.center_y = 160
+        self.center_x = -800
+        self.center_y = -800
 
         idle = []
         for i in range(6):
@@ -123,6 +162,7 @@ class Game(arcade.Window):
         self.physics_engine = None
         self.other_players_list = None
         self.tile_map = None
+        self.damage_change = [0,0,0,0]
 
         # NOT NEEDED - ONLY FOR DEV
         self.time1 = time.time()
@@ -209,7 +249,7 @@ class Game(arcade.Window):
         )
 
         arcade.draw_text(
-            "Player " + str(int(self.player.player_number) + 1),
+            "Player " + str(self.player.player_number + 1),
             self.player.center_x - 115/2,
             self.player.center_y + self.player.height/3,
             arcade.color.BLACK,
@@ -221,9 +261,7 @@ class Game(arcade.Window):
         )
 
         for player in self.other_players_list:
-            print("Other Player List")
             if player.player_number != self.player.player_number:
-                print('hi')
                 arcade.draw_rectangle_filled(
                     player.center_x,
                     player.center_y + player.height/3,
@@ -232,7 +270,7 @@ class Game(arcade.Window):
                     color=arcade.color.WHITE,
                 )
                 arcade.draw_text(
-                    "Player " + str(int(player.player_number) + 1),
+                    "Player " + str(player.player_number + 1),
                     player.center_x - 115/2,
                     player.center_y + player.height/3,
                     arcade.color.BLACK,
@@ -242,7 +280,6 @@ class Game(arcade.Window):
                     width=115,
                     font_name="Kenney Future",
                 )
-        
 
     def draw_healthbars(self):
         self.max_health = 100
@@ -288,32 +325,36 @@ class Game(arcade.Window):
         self.player.on_update(delta_time)
         self.physics_engine.update()
         
-        self.time1 = time.time()
-        
-        self.send(f"{self.player.center_x} {self.player.center_y} {self.player.player_number} {time.time_ns()} {self.player.change_x} {self.player.change_y}")
+        send_data = {
+                "x": self.player.center_x,
+                "y": self.player.center_y,
+                "vx": self.player.change_x, # change_x
+                "vy": self.player.change_y, # change_y
+                "t": time.time_ns(), # time
+                "dam": self.damage_change, # damage
+                "st": self.player.state, # state 
+            }
 
-        self.time2 = time.time()
+        self.send(send_data)
 
         # Loop through the other_players_list and update their values to client.recv
         index = 0
+
         for player in self.other_players_list:
-            current = received_list[index].split()
+            server_center_x = float(received_list[index]["x"])
+            server_center_y = float(received_list[index]["y"])
+            server_change_x = float(received_list[index]["vx"])
+            server_change_y = float(received_list[index]["vy"])
+            server_time = int(received_list[index]["t"])
 
-            server_center_x = float(current[0])
-            server_center_y = float(current[1])
-            server_change_x = float(current[4])
-            server_change_y = float(current[5])
-            server_time = int(current[3])
-
-            player.player_number = str(current[2])
+            player.player_number = index
         
-            if current[2] == self.player.player_number:
+            if index == self.player.player_number:
                 if self.player.center_y < -1000:
                     # TODO kill player
                     self.player.center_x = 100
                     self.player.center_y = 160
             else:
-
                 time_difference = (time.time_ns() - server_time)/1000/1000/1000
 
                 player.center_x = server_center_x + time_difference * 2*server_change_x/delta_time
@@ -325,19 +366,66 @@ class Game(arcade.Window):
                     player.center_y = server_center_y
 
                 player.set_hit_box(player.texture.hit_box_points)
-                    
+            
+            # Update damage to all players including client based on damage in recieved_data from server.
+
+# players = {
+#     0: {
+#         "x": 111,
+#         "y": 500,
+#         "vx": 0, # change_x
+#         "vy": 0, # change_y
+#         "t": 0, # time
+#         "dam": [0,0,0,0], # damage
+#         "st": 0, # state 
+#     },
+#     1: {
+#         "x": 110,
+#         "y": 555,
+#         "vx": 0,
+#         "vy": 0,
+#         "t": 0,
+#         "dam": [0,0,0,0],
+#         "st": 0
+#     },
+#     2: {
+#         "x": 120,
+#         "y": 555,
+#         "vx": 0,
+#         "vy": 0,
+#         "t": 0,
+#         "dam": [0,0,0,0],
+#         "st": 0
+#     },
+#     3: { 
+#         "x": 110,
+#         "y": 545,
+#         "vx": 0,
+#         "vy": 0,
+#         "t": 0,
+#         "dam": [0,0,0,0],
+#         "st": 0,
+#     },
+# }
+            for key, value in received_list.items():
+                if index == self.player.player_number:
+                    self.player.curr_health -= value["dam"][index]
+                player.curr_health -= value["dam"][index]
+
             index += 1
-        
+
         # Decrement Health On Attack Collision
+        self.damage_change = [0,0,0,0]
         if self.player.state == 'atk_1':
             player_hit_list = arcade.check_for_collision_with_list(self.player, self.other_players_list)
 
             for player in player_hit_list:
-                player.curr_health -= 5*delta_time
+                #player.curr_health -= 5*delta_time
+                self.damage_change[player.player_number] = 5*delta_time
                 if player.curr_health < 0:
                     player.curr_health = 0
                     continue # TODO: kill player
-        
+
         self.other_players_list.update()
 
        
