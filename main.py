@@ -11,7 +11,7 @@ import sys
 # GAME
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 650
-SCREEN_TITLE = "MULTISHOOTER (please work)"
+SCREEN_TITLE = "APPLE SMASH!"
 GRAVITY = 0.2
 
 # PLAYER
@@ -27,7 +27,7 @@ HEALTH_NUMBER_OFFSET_Y = -20
 PORT = 8080
 HEADER = 64
 SERVER = "143.198.247.145"
-# SERVER = 'localhost'
+#SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
@@ -248,10 +248,23 @@ class Player(arcade.Sprite):
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
 
-class Game(arcade.Window):
-    def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
+class TitleView(arcade.View):
+    def on_show(self):
+        arcade.set_background_color(arcade.csscolor.DARK_SLATE_BLUE)
+        arcade.set_viewport(0, self.window.width, 0, self.window.height)
 
-        super().__init__(width, height, title, update_rate=float(1/60))
+    def on_draw(self):
+        self.clear()
+        arcade.draw_text("APPLE SMASH", self.window.width/2 , self.window.height/2, arcade.color.WHITE, font_size=20, anchor_x="center")
+
+    def on_mouse_press(self, _x, _y, _button, _modifiers ):
+        game_view = Game()
+        game_view.setup()
+        self.window.show_view(game_view)
+
+class Game(arcade.View):
+    def __init__(self):
+        super().__init__()
         arcade.set_background_color(arcade.csscolor.BLUE)
 
         # NEEDED
@@ -514,8 +527,10 @@ class Game(arcade.Window):
 def main():
     thread = threading.Thread(target=get_server_data, args=())
     thread.start()
-    window = Game()
-    window.setup()
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    start_view = TitleView()
+    window.show_view(start_view)
+    #start_view.setup()
     arcade.run()
     
 
