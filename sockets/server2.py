@@ -14,6 +14,7 @@ SERVER = "0.0.0.0"
 ADDRESS = (SERVER, PORT)
 
 receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 receiving_socket.bind(ADDRESS)
 
 players = {
@@ -60,9 +61,7 @@ def handle_client(connection, address, player_number):
     global players
     
     error_counter = 0
-    while error_counter < 1:
-        if time.time() % 
-        print(time.time())
+    while error_counter < 5:
         try:
             msg = pickle.loads(connection.recv(2048))
 
@@ -76,6 +75,10 @@ def handle_client(connection, address, player_number):
                 connection.close()
                 break
 
+            error_counter -= 1
+            if error_counter < 0:
+                error_counter = 0
+
         except Exception as e:
             error_counter += 1
             connection.close()
@@ -83,14 +86,17 @@ def handle_client(connection, address, player_number):
             pass
 
 sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 sending_socket.bind((SERVER, 5007))
 def send_server_data(connection2, address2, player_number):
     error_counter = 0
-    while error_counter < 1:
+    while error_counter < 5:
         try:
             time.sleep(random.randint(40, 40) / 1000)
             connection2.sendto(pickle.dumps(players), (SERVER, 5007))
-            #print('sent: ', players)
+            error_counter -= 1
+            if error_counter < 0:
+                error_counter = 0
         except Exception as e:
             error_counter += 1
             connection2.close()

@@ -6,6 +6,7 @@ import pickle
 import time
 import threading
 from pyglet.gl.gl import GL_NEAREST
+import sys
 
 # GAME
 SCREEN_WIDTH = 1000
@@ -31,12 +32,14 @@ ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
 # socket
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(ADDRESS)
+sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+sending_socket.connect(ADDRESS)
 
 # 2nd UDP socket to receive data from server's multicasted server_data.
-server_data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_data_socket.connect((SERVER, 5007))
+receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+receiving_socket.connect((SERVER, 5007))
 received_list = {
     0: {
         "x": 111,
@@ -79,7 +82,9 @@ def get_server_data():
     while True:
         global received_list
         try:
-            data = pickle.loads(server_data_socket.recv(2048))
+            received = receiving_socket.recv(2048)
+            print(sys.getsizeof(received))
+            data = pickle.loads(received)
             if isinstance(data, dict) and set(data.keys()) == {0, 1, 2, 3}:
                 received_list = data
             else:
@@ -178,7 +183,7 @@ class Game(arcade.Window):
 
         # SETUP PLAYER
         self.send('SETUP')
-        player_number = pickle.loads(client.recv(2048))
+        player_number = pickle.loads(sending_socket.recv(2048))
         self.player = Player(player_number=player_number) 
 
         # SETUP OTHER PLAYERS
@@ -319,7 +324,7 @@ class Game(arcade.Window):
         
     def send(self, msg):
         message = pickle.dumps(msg)
-        client.send(message)
+        sending_socket.send(message)
 
     def on_update(self, delta_time):
         self.player.update()
@@ -358,13 +363,16 @@ class Game(arcade.Window):
             else:
                 time_difference = (time.time_ns() - server_time)/1000/1000/1000
 
-                player.center_x = server_center_x + time_difference * 2*server_change_x/delta_time
+                player.center_x = server_center_x# + time_difference * 2*server_change_x/delta_time # TODO: This prediction depends on client's clocks being synced and consistent epoch. 
                 if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
                     player.center_x = server_center_x
 
-                player.center_y = server_center_y + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
+                player.center_y = server_center_y# + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
                 if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
                     player.center_y = server_center_y
+
+                player.change_x = server_change_x
+                player.change_y = server_change_y
 
                 player.set_hit_box(player.texture.hit_box_points)
             
