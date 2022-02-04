@@ -560,6 +560,7 @@ class Game(arcade.Window):
                 if player.character_selection != server_character_selection:
                     player.character_selection = server_character_selection
                     player.load_character_textures()
+                    print('hi')
 
                 if index == self.player.player_number:
                     if self.player.center_y < -1000:
