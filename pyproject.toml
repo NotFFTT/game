@@ -8,6 +8,8 @@ authors = ["David Hecker <heckerdw@gmail.com>"]
 python = "^3.9"
 black = "^22.1.0"
 flake8 = "^4.0.1"
+pillow = "9.0.0"
+arcade = "^2.6.10"
 
 [tool.poetry.dev-dependencies]
 
