@@ -1,4 +1,5 @@
 from ast import Pass
+from ctypes.wintypes import CHAR
 from locale import currency
 import arcade
 import socket
@@ -22,6 +23,7 @@ HEALTHBAR_HEIGHT = 20
 HEALTHBAR_OFFSET_Y = -10
 HEALTH_NUMBER_OFFSET_X = -20
 HEALTH_NUMBER_OFFSET_Y = -20
+CHARACTER_SELECTION = 2
 
 # SERVER
 PORT = 8080
@@ -49,6 +51,7 @@ received_list = {
         "t": 0, # time
         "dam": [0,0,0,0], # damage
         "st": 0, # state 
+        "c": 0, # character 0-3
     },
     1: {
         "x": 110,
@@ -57,7 +60,8 @@ received_list = {
         "vy": 0,
         "t": 0,
         "dam": [0,0,0,0],
-        "st": 0
+        "st": 0,
+        "c": 0,
     },
     2: {
         "x": 120,
@@ -66,7 +70,8 @@ received_list = {
         "vy": 0,
         "t": 0,
         "dam": [0,0,0,0],
-        "st": 0
+        "st": 0,
+        "c": 0,
     },
     3: { 
         "x": 110,
@@ -76,6 +81,7 @@ received_list = {
         "t": 0,
         "dam": [0,0,0,0],
         "st": 0,
+        "c": 0,
     },
 }
 def get_server_data():
@@ -95,7 +101,7 @@ def get_server_data():
 
 
 class Player(arcade.Sprite):
-    def __init__(self, player_number=0, max_health=100):
+    def __init__(self, player_number=0, max_health=100, character_selection=CHARACTER_SELECTION):
         super().__init__()
         self.max_health = max_health
         self.state = 'idle'
@@ -106,6 +112,7 @@ class Player(arcade.Sprite):
         self.scale = 1
         self.center_x = -800
         self.center_y = -800
+        self.character_selection = character_selection
 
 
         # if self.player_number == 0:
@@ -208,13 +215,13 @@ class Player(arcade.Sprite):
             },
         }
 
-        if self.player_number == 0:
+        if self.character_selection == 0:
             self.character_type = "fire"
-        elif self.player_number == 1:
+        elif self.character_selection == 1:
             self.character_type = "water"
-        elif self.player_number == 2:
+        elif self.character_selection == 2:
             self.character_type = "wind"
-        elif self.player_number == 3:
+        elif self.character_selection == 3:
             self.character_type = "earth"
 
         idle = []
@@ -362,24 +369,24 @@ class Game(arcade.View):
         self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
         self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
         self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
-        self.bg_music = arcade.load_sound("assets/sounds/2019-01-22_-_Ready_to_Fight_-_David_Fesliyan.wav")
+        #self.bg_music = arcade.load_sound("assets/sounds/2019-01-22_-_Ready_to_Fight_-_David_Fesliyan.wav")
         
     def setup(self):
 
         # SETUP SCENE
         self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        arcade.play_sound(self.bg_music, volume=0.5)
+        #arcade.play_sound(self.bg_music, volume=0.5)
         
         # SETUP PLAYER
         self.send('SETUP')
         player_number = pickle.loads(sending_socket.recv(2048))
-        self.player = Player(player_number=player_number) 
+        self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
 
         # SETUP OTHER PLAYERS
         self.other_players_list = arcade.SpriteList()
         for i in range(4):
-            self.other_players_list.append(sprite=Player())
+            self.other_players_list.append(sprite=Player(character_selection=CHARACTER_SELECTION))
 
         # SETUP PHYSICS
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
@@ -430,6 +437,8 @@ class Game(arcade.View):
         self.scene.draw(filter=GL_NEAREST)
 
         # Draw client player
+        if not self.player:
+            self.setup()
         self.player.draw()
         #self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
 
@@ -536,7 +545,8 @@ class Game(arcade.View):
                 "vy": self.player.change_y, # change_y
                 "t": time.time_ns(), # time
                 "dam": self.damage_change, # damage
-                "st": self.player.state, # state 
+                "st": self.player.state, # state
+                "c": CHARACTER_SELECTION
             }
 
         self.send(send_data)
@@ -552,8 +562,10 @@ class Game(arcade.View):
             server_change_y = float(received_list[index]["vy"])
             server_time = int(received_list[index]["t"])
             server_state = str(received_list[index]["st"])
+            server_character_selection = str(received_list[index]["c"])
 
             player.player_number = index
+            player.character_selection = server_character_selection
         
             if index == self.player.player_number:
                 if self.player.center_y < -1000:

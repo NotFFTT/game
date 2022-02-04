@@ -9,8 +9,8 @@ import random
 PORT = 8080
 HEADER = 64
 FORMAT = 'utf-8'
-SERVER = 'localhost'
-# SERVER = "0.0.0.0"
+#SERVER = 'localhost'
+SERVER = "0.0.0.0"
 ADDRESS = (SERVER, PORT)
 
 receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -25,7 +25,8 @@ players = {
         "vy": 0, # change_y
         "t": 0, # time
         "dam": [0,0,0,0], # damage
-        "st": 0, # state 
+        "st": 0, # state
+        "c": 0, # character 0-3
     },
     1: {
         "x": -800,
@@ -34,7 +35,8 @@ players = {
         "vy": 0,
         "t": 0,
         "dam": [0,0,0,0],
-        "st": 0
+        "st": 0,
+        "c": 0,
     },
     2: {
         "x": -800,
@@ -43,7 +45,8 @@ players = {
         "vy": 0,
         "t": 0,
         "dam": [0,0,0,0],
-        "st": 0
+        "st": 0,
+        "c": 0,
     },
     3: { 
         "x": -800,
@@ -53,6 +56,7 @@ players = {
         "t": 0,
         "dam": [0,0,0,0],
         "st": 0,
+        "c": 0,
     },
 }
 
