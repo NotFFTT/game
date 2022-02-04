@@ -152,7 +152,7 @@ class Player(arcade.Sprite):
                 "atk_1_qty": 8,
                 "sp_atk_qty": 26,
                 "jump_qty": 2,
-                "death_qty": 12,
+                "death_qty": 19,
 
                 "idle_row": 0,
                 "run_row": 1,
@@ -316,7 +316,7 @@ class Player(arcade.Sprite):
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
         super().__init__(width=width, height=height, title=title)
-        arcade.set_background_color(arcade.csscolor.BLUE)
+        arcade.set_background_color((59, 142, 96))
 
         # NEEDED
         self.player = None
@@ -401,7 +401,7 @@ class Game(arcade.Window):
                 arcade.play_sound(self.sword_sound)
                 self.player.animation_start = time.time_ns()
             elif symbol == arcade.key.R:
-                if abs(self.player.change_y) <= 0.5 or arcade.check_for_collision_with_list(self.player, self.scene['floor']):
+                if abs(self.player.change_y) <= 0.5: # or arcade.check_for_collision_with_list(self.player, self.scene['floor']):
                     self.player.state = "sp_atk"
                     arcade.play_sound(self.sword_attack)
                     self.player.animation_start = time.time_ns()
