@@ -29,6 +29,7 @@ CHARACTER_SELECTION = 0
 
 # SERVER
 PORT = 8080
+PORT2 = 5007
 HEADER = 64
 SERVER = "143.198.247.145"
 #SERVER = 'localhost'
@@ -36,14 +37,25 @@ ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
 # socket
-sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-sending_socket.connect(ADDRESS)
+try:
+    sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    sending_socket.connect((SERVER, PORT))
+except:
+    sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    sending_socket.connect((SERVER, PORT+1))
 
 # 2nd UDP socket to receive data from server's multicasted server_data.
-receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-receiving_socket.connect((SERVER, 5007))
+try:
+    receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    receiving_socket.connect((SERVER, PORT2))
+except:
+    receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    receiving_socket.connect((SERVER, PORT2+1))
+
 received_list = None
 def get_server_data():
     global received_list
@@ -209,10 +221,10 @@ class Player(arcade.Sprite):
 
     def on_update(self, delta_time):
         self.update_animation(delta_time)
-        # if self.curr_health <= 0:
-        #         self.state = 'death'
-        #         self.animation_start = time.time_ns()
-        if abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death'):
+        if self.curr_health <= 0 and self.state != 'death':
+                self.state = 'death'
+                self.animation_start = time.time_ns()
+        elif abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death'):
             self.state = 'jump'
         elif self.change_x > 0:
             if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
@@ -383,6 +395,13 @@ class Game(arcade.Window):
                     arcade.play_sound(self.sword_attack)
                     self.player.animation_start = time.time_ns()
         
+        else:
+            if symbol == arcade.key.F:
+                self.player.state = 'idle'
+                self.player.curr_health = self.player.max_health
+                self.player.center_x = -800
+                self.player.center_y = -800
+        
         # QUIT
         if symbol == arcade.key.ESCAPE:
             self.send("DISCONNECT")
@@ -507,6 +526,12 @@ class Game(arcade.Window):
         self.player.update()
         self.player.on_update(delta_time)
         self.physics_engine.update()
+
+        # Trigger death animation on current player when equal to or less than zero.
+        # if self.player.curr_health <= 0:
+        #     self.player.curr_health = 0
+        #     self.player.state = 'death'
+        #     self.player.animation_start = time.time_ns()
         
         send_data = {
                 "x": self.player.center_x,
@@ -528,7 +553,6 @@ class Game(arcade.Window):
                 server_center_y = float(received_list[index]["y"])
                 server_change_x = float(received_list[index]["vx"])
                 server_change_y = float(received_list[index]["vy"])
-                #server_time = int(received_list[index]["t"])
                 server_state = str(received_list[index]["st"])
                 server_character_selection = str(received_list[index]["c"])
 
@@ -539,24 +563,25 @@ class Game(arcade.Window):
 
                 if index == self.player.player_number:
                     if self.player.center_y < -1000:
-                        # TODO kill player
                         self.player.center_x = 100
                         self.player.center_y = 160
+                        player.curr_health = player.max_health
                 else:
                     prev_state = player.state
                     player.state = server_state
-                    if prev_state != player.state and (server_state == 'atk_1' or server_state == 'sp_atk'):
+                    if index == self.player.player_number and player.curr_health == player.max_health:
+                        self.player.curr_health = self.player.max_health
+                    elif prev_state == 'death' and player.state == 'idle':
+                        player.curr_health = player.max_health
+                        if index == self.player.player_number:
+                            self.player.curr_health = self.player.max_health
+                    elif prev_state != player.state and (server_state == 'atk_1' or server_state == 'sp_atk' or server_state == 'death'):
                         player.animation_start = time.time_ns()
+                    elif player.state == "death":
+                        player.curr_health = 0
 
-                    #time_difference = (time.time_ns() - server_time)/1000/1000/1000
-
-                    player.center_x = server_center_x# + time_difference * 2*server_change_x/delta_time # TODO: This prediction depends on client's clocks being synced and consistent epoch. 
-                    if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
-                        player.center_x = server_center_x
-
-                    player.center_y = server_center_y# + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
-                    if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
-                        player.center_y = server_center_y
+                    player.center_x = server_center_x
+                    player.center_y = server_center_y
 
                     player.change_x = server_change_x
                     player.change_y = server_change_y
@@ -567,15 +592,9 @@ class Game(arcade.Window):
                 for key, value in received_list.items():
                     if index == self.player.player_number:
                         self.player.curr_health -= value["dam"][index]
+                        self.player.curr_health = 0 if self.player.state == 'death' else self.player.curr_health
                     player.curr_health -= value["dam"][index]
-                
-                # Trigger death animation on any player (client or other players) whose health is equal to or less than zero.
-                if self.player.curr_health <= 0:
-                    player.curr_health = 0
-                    self.player.state = 'death'
-                    self.player.animation_start = time.time_ns()
-                if player.state == "death":
-                    player.curr_health = 0
+                    player.curr_health = 0 if player.curr_health <= 0 else player.curr_health
 
                 index += 1
 
@@ -592,7 +611,6 @@ class Game(arcade.Window):
             player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
             for player in player_hit_list:
                 self.damage_change[player.player_number] = 100*delta_time
-
 
         self.players_list.update()
         self.players_list.on_update()

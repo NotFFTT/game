@@ -7,6 +7,7 @@ import random
 
 #PORT = 9999
 PORT = 8080
+PORT2 = 5007
 HEADER = 64
 FORMAT = 'utf-8'
 #SERVER = 'localhost'
@@ -15,11 +16,17 @@ ADDRESS = (SERVER, PORT)
 
 receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-receiving_socket.bind(ADDRESS)
+try:
+    receiving_socket.bind((SERVER, PORT))
+except:
+    receiving_socket.bind((SERVER, PORT+1))
 
 sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-sending_socket.bind((SERVER, 5007))
+try:
+    sending_socket.bind((SERVER, PORT2))
+except:
+    sending_socket.bind((SERVER, PORT2+1))
 
 players = {
     0: {
