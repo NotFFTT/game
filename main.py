@@ -8,6 +8,8 @@ import time
 import threading
 from pyglet.gl.gl import GL_NEAREST
 import sys
+import arcade.gui
+
 
 # GAME
 SCREEN_WIDTH = 1000
@@ -42,63 +44,22 @@ sending_socket.connect(ADDRESS)
 receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 receiving_socket.connect((SERVER, 5007))
-received_list = {
-    0: {
-        "x": 111,
-        "y": 500,
-        "vx": 0, # change_x
-        "vy": 0, # change_y
-        "t": 0, # time
-        "dam": [0,0,0,0], # damage
-        "st": 0, # state 
-        "c": 0, # character 0-3
-    },
-    1: {
-        "x": 110,
-        "y": 555,
-        "vx": 0,
-        "vy": 0,
-        "t": 0,
-        "dam": [0,0,0,0],
-        "st": 0,
-        "c": 0,
-    },
-    2: {
-        "x": 120,
-        "y": 555,
-        "vx": 0,
-        "vy": 0,
-        "t": 0,
-        "dam": [0,0,0,0],
-        "st": 0,
-        "c": 0,
-    },
-    3: { 
-        "x": 110,
-        "y": 545,
-        "vx": 0,
-        "vy": 0,
-        "t": 0,
-        "dam": [0,0,0,0],
-        "st": 0,
-        "c": 0,
-    },
-}
+received_list = None
 def get_server_data():
+    global received_list
     while True:
-        global received_list
         try:
             received = receiving_socket.recv(2048)
-            print(sys.getsizeof(received))
+            #print(sys.getsizeof(received))
             data = pickle.loads(received)
             if isinstance(data, dict) and set(data.keys()) == {0, 1, 2, 3}:
                 received_list = data
+                #print(received_list)
             else:
                 print("Data not in expected format in get_server_data: ", data)
         except Exception as e:
             print("get_server_data error, received data:", e)
             pass
-
 
 class Player(arcade.Sprite):
     def __init__(self, player_number=0, max_health=100, character_selection=CHARACTER_SELECTION):
@@ -113,33 +74,8 @@ class Player(arcade.Sprite):
         self.center_x = -800
         self.center_y = -800
         self.character_selection = character_selection
-
-
-        # if self.player_number == 0:
-        #     self.element = "fire"
-        # elif self.player_number == 1:
-        #     self.element = "earth"
-        # elif self.player_number == 2:
-        #     self.element = "water"
-        # elif self.player_number == 3:
-        #     self.element = "wizard"
-
-        # idle = []
-        # for i in range(6):
-        #     idle.append(arcade.load_texture_pair(f"assets/earth/idle/idle_{i+1}.png"))
-
-        # run = []
-        # for i in range(8):
-        #     run.append(arcade.load_texture_pair(f"assets/earth/run/run_{i+1}.png"))
-            
-        # atk_1 = []
-        # for i in range(6):
-        #      atk_1.append(arcade.load_texture_pair(f"assets/earth/1_atk/1_atk_{i+1}.png"))
+        self.character_type = "fire"
         
-        # sp_atk = []
-        # for i in range(25):
-        #      sp_atk.append(arcade.load_texture_pair(f"assets/earth/sp_atk/sp_atk_{i+1}.png"))
-
         self.sprite_info = {
             "water": {
                 "width": 224,
@@ -215,6 +151,13 @@ class Player(arcade.Sprite):
             },
         }
 
+        self.animation_cells = None
+        self.load_character_textures()
+
+        self.texture = self.animation_cells['idle'][0][self.direction]
+
+    def load_character_textures(self):
+
         if self.character_selection == 0:
             self.character_type = "fire"
         elif self.character_selection == 1:
@@ -259,8 +202,6 @@ class Player(arcade.Sprite):
             'death': death,
         }
 
-        self.texture = self.animation_cells['idle'][0][self.direction]
-
     def load_texture_pair_modified(self, filename, x, y, width, height, hit_box_algorithm: str = "Simple"):
         return [
             arcade.load_texture(filename, x, y, width, height, hit_box_algorithm=hit_box_algorithm),
@@ -285,8 +226,6 @@ class Player(arcade.Sprite):
         elif self.state != 'atk_1' and self.state != 'sp_atk':
                 self.state = 'idle'
         
-            
-
     def update_animation(self, delta_time):
 
         if self.state == 'jump':
@@ -348,16 +287,15 @@ class Player(arcade.Sprite):
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
 
 
-
-class Game(arcade.View):
-    def __init__(self):
-        super().__init__()
+class Game(arcade.Window):
+    def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
+        super().__init__(width=width, height=height, title=title)
         arcade.set_background_color(arcade.csscolor.BLUE)
 
         # NEEDED
         self.player = None
         self.physics_engine = None
-        self.other_players_list = None
+        self.players_list = None
         self.tile_map = None
         self.damage_change = [0,0,0,0]
 
@@ -384,9 +322,9 @@ class Game(arcade.View):
         self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
 
         # SETUP OTHER PLAYERS
-        self.other_players_list = arcade.SpriteList()
+        self.players_list = arcade.SpriteList()
         for i in range(4):
-            self.other_players_list.append(sprite=Player(character_selection=CHARACTER_SELECTION))
+            self.players_list.append(sprite=Player(character_selection=CHARACTER_SELECTION))
 
         # SETUP PHYSICS
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
@@ -443,7 +381,7 @@ class Game(arcade.View):
         #self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
 
         # Draw other players
-        for player in self.other_players_list:
+        for player in self.players_list:
             #if player.player_number != self.player.player_number:
             player.draw()
         
@@ -473,7 +411,7 @@ class Game(arcade.View):
             font_name="Kenney Future",
         )
 
-        for player in self.other_players_list:
+        for player in self.players_list:
             if player.player_number != self.player.player_number:
                 arcade.draw_rectangle_filled(
                     player.center_x,
@@ -496,7 +434,7 @@ class Game(arcade.View):
 
     def draw_healthbars(self):
         self.max_health = 100
-        for index, player in enumerate(self.other_players_list):
+        for index, player in enumerate(self.players_list):
             
             health_width = HEALTHBAR_WIDTH * (player.curr_health / self.max_health)
             x = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
@@ -530,10 +468,15 @@ class Game(arcade.View):
             )
         
     def send(self, msg):
-        message = pickle.dumps(msg)
-        sending_socket.send(message)
+        try:
+            message = pickle.dumps(msg)
+            sending_socket.send(message)
+        except Exception as e:
+            print("Error in send method: ", e)
 
     def on_update(self, delta_time):
+        if not self.player:
+            self.setup()
         self.player.update()
         self.player.on_update(delta_time)
         self.physics_engine.update()
@@ -543,68 +486,73 @@ class Game(arcade.View):
                 "y": self.player.center_y,
                 "vx": self.player.change_x, # change_x
                 "vy": self.player.change_y, # change_y
-                "t": time.time_ns(), # time
+                #"t": time.time_ns(), # time
                 "dam": self.damage_change, # damage
                 "st": self.player.state, # state
-                "c": CHARACTER_SELECTION
+                "c": CHARACTER_SELECTION,
             }
 
         self.send(send_data)
 
         # Loop through the other_players_list and update their values to client.recv
         index = 0
+        print(received_list)
+        try:
+            for player in self.players_list:
+                server_center_x = float(received_list[index]["x"])
+                server_center_y = float(received_list[index]["y"])
+                server_change_x = float(received_list[index]["vx"])
+                server_change_y = float(received_list[index]["vy"])
+                #server_time = int(received_list[index]["t"])
+                server_state = str(received_list[index]["st"])
+                server_character_selection = str(received_list[index]["c"])
 
-        for player in self.other_players_list:
-            
-            server_center_x = float(received_list[index]["x"])
-            server_center_y = float(received_list[index]["y"])
-            server_change_x = float(received_list[index]["vx"])
-            server_change_y = float(received_list[index]["vy"])
-            server_time = int(received_list[index]["t"])
-            server_state = str(received_list[index]["st"])
-            server_character_selection = str(received_list[index]["c"])
+                player.player_number = index
+                if player.character_selection != server_character_selection:
+                    player.character_selection = server_character_selection
+                    player.load_character_textures()
 
-            player.player_number = index
-            player.character_selection = server_character_selection
-        
-            if index == self.player.player_number:
-                if self.player.center_y < -1000:
-                    # TODO kill player
-                    self.player.center_x = 100
-                    self.player.center_y = 160
-            else:
-                prev_state = player.state
-                player.state = server_state
-                if prev_state != player.state and (server_state == 'atk_1' or server_state == 'sp_atk'):
-                    player.animation_start = time.time_ns()
-
-                time_difference = (time.time_ns() - server_time)/1000/1000/1000
-
-                player.center_x = server_center_x# + time_difference * 2*server_change_x/delta_time # TODO: This prediction depends on client's clocks being synced and consistent epoch. 
-                if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
-                    player.center_x = server_center_x
-
-                player.center_y = server_center_y# + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
-                if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
-                    player.center_y = server_center_y
-
-                player.change_x = server_change_x
-                player.change_y = server_change_y
-
-                player.set_hit_box(player.texture.hit_box_points)
-            
-            # Update damage to all players including client based on damage in recieved_data from server.
-            for key, value in received_list.items():
                 if index == self.player.player_number:
-                    self.player.curr_health -= value["dam"][index]
-                player.curr_health -= value["dam"][index]
+                    if self.player.center_y < -1000:
+                        # TODO kill player
+                        self.player.center_x = 100
+                        self.player.center_y = 160
+                else:
+                    prev_state = player.state
+                    player.state = server_state
+                    if prev_state != player.state and (server_state == 'atk_1' or server_state == 'sp_atk'):
+                        player.animation_start = time.time_ns()
 
-            index += 1
+                    #time_difference = (time.time_ns() - server_time)/1000/1000/1000
+
+                    player.center_x = server_center_x# + time_difference * 2*server_change_x/delta_time # TODO: This prediction depends on client's clocks being synced and consistent epoch. 
+                    if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
+                        player.center_x = server_center_x
+
+                    player.center_y = server_center_y# + time_difference * 2*server_change_y/delta_time - (time_difference/delta_time) ** 2 * GRAVITY
+                    if player.texture and arcade.check_for_collision_with_list(player, self.scene["floor"]):
+                        player.center_y = server_center_y
+
+                    player.change_x = server_change_x
+                    player.change_y = server_change_y
+
+                    player.set_hit_box(player.texture.hit_box_points)
+                
+                # Update damage to all players including client based on damage in recieved_data from server.
+                for key, value in received_list.items():
+                    if index == self.player.player_number:
+                        self.player.curr_health -= value["dam"][index]
+                    player.curr_health -= value["dam"][index]
+
+                index += 1
+
+        except Exception as e:
+            print("Error in players list loop: ", e)
 
         # Decrement Health On Attack Collision
         self.damage_change = [0,0,0,0]
         if self.player.state == 'atk_1':
-            player_hit_list = arcade.check_for_collision_with_list(self.player, self.other_players_list)
+            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
 
             for player in player_hit_list:
                 #player.curr_health -= 5*delta_time
@@ -613,20 +561,57 @@ class Game(arcade.View):
                     player.curr_health = 0
                     continue # TODO: kill player
 
-        self.other_players_list.update()
-        self.other_players_list.on_update()
+        self.players_list.update()
+        self.players_list.on_update()
+
+# class TitleView(arcade.View):
+#     def __init__(self):
+#         super().__init__()
+#         self.manager = arcade.gui.UIManager()
+#         self.manager.enable()
+#         self.v_box = arcade.gui.UIBoxLayout()
+        
+#         start_button = arcade.gui.UIFlatButton(text="Start", width=150)
+#         self.v_box.add(start_button.with_space_around(bottom=10))
+        
+#         @start_button.event('on_click')
+#         def on_click_start(event):
+#             self.manager.disable()
+#             game_view = Game()
+#             self.window.show_view(game_view)
+#             game_view.setup()
+            
+#         self.manager.add(
+#             arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
+        
+#     def on_show(self):
+#         arcade.set_background_color(arcade.csscolor.DARK_SLATE_BLUE)
+#         arcade.set_viewport(0, self.window.width, 0, self.window.height)
+
+#     def on_draw(self):
+#         self.clear()
+#         arcade.draw_text("APPLE SMASH", self.window.width/2 , 380, arcade.color.WHITE, font_size=20, anchor_x="center",)
+#         self.manager.draw()
+
+
+# def main():
+#     #from title import TitleView
+#     thread = threading.Thread(target=get_server_data, args=())
+#     thread.start()
+#     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+#     start_view = TitleView()
+#     window.show_view(start_view)
+#     #start_view.setup()
+#     arcade.run()
 
        
 def main():
-    from title import TitleView
     thread = threading.Thread(target=get_server_data, args=())
     thread.start()
-    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    start_view = TitleView()
-    window.show_view(start_view)
-    #start_view.setup()
+    window = Game()
+    window.setup()
     arcade.run()
-    
 
+    
 if __name__ == "__main__":
     main()
