@@ -2,6 +2,24 @@
 
 Apple Smash is an online multiplayer battle game allowing up to four unique player characters. Apple Smash utilizes the Python Arcade game engine and the server is hosted on Digital Ocean.  
 
+## How to Play
+
+- Clone this Repo
+- Install Dependencies
+- Open terminal, cd into root directory of Game
+- Execute game with ```python main.py```
+- Enjoy!
+
+## Controls
+
+- A,W,S,D or Arrows for Directions
+- E - Attack
+- R - Special Attack
+- Space, Up, or W to jump
+- F to respawn
+- 1,2,3,4 to change character in-game
+- ESC to close socket
+
 ## Team
 
 - Miguel Fierro
