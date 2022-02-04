@@ -25,7 +25,7 @@ HEALTHBAR_HEIGHT = 20
 HEALTHBAR_OFFSET_Y = -10
 HEALTH_NUMBER_OFFSET_X = -20
 HEALTH_NUMBER_OFFSET_Y = -20
-CHARACTER_SELECTION = 2
+CHARACTER_SELECTION = 3
 
 # SERVER
 PORT = 8080
@@ -185,7 +185,6 @@ class Player(arcade.Sprite):
              sp_atk.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["sp_atk_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
 
         jump = []
-
         for i in range(self.sprite_info[self.character_type]["jump_qty"]):
             jump.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=0, y=(self.sprite_info[self.character_type]["jump_row"] + i)*self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
 
@@ -261,6 +260,8 @@ class Player(arcade.Sprite):
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
 
             if current_animation_frame + 1 > number_of_frames:
+                self.texture = self.animation_cells['idle'][0][self.direction]
+                self.set_hit_box(self.texture.hit_box_points)
                 self.state = "idle"
             else:
                 self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
@@ -274,6 +275,8 @@ class Player(arcade.Sprite):
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
 
             if current_animation_frame + 1 > number_of_frames:
+                self.texture = self.animation_cells['idle'][0][self.direction]
+                self.set_hit_box(self.texture.hit_box_points)
                 self.state = "idle"
             else:
                 self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
@@ -484,11 +487,10 @@ class Game(arcade.Window):
         send_data = {
                 "x": self.player.center_x,
                 "y": self.player.center_y,
-                "vx": self.player.change_x, # change_x
-                "vy": self.player.change_y, # change_y
-                #"t": time.time_ns(), # time
-                "dam": self.damage_change, # damage
-                "st": self.player.state, # state
+                "vx": self.player.change_x,
+                "vy": self.player.change_y,
+                "dam": self.damage_change,
+                "st": self.player.state,
                 "c": CHARACTER_SELECTION,
             }
 
@@ -556,7 +558,7 @@ class Game(arcade.Window):
 
             for player in player_hit_list:
                 #player.curr_health -= 5*delta_time
-                self.damage_change[player.player_number] = 5*delta_time
+                self.damage_change[player.player_number] = 25*delta_time
                 if player.curr_health < 0:
                     player.curr_health = 0
                     continue # TODO: kill player
