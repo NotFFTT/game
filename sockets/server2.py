@@ -9,8 +9,8 @@ import random
 PORT = 8080
 HEADER = 64
 FORMAT = 'utf-8'
-#SERVER = 'localhost'
-SERVER = "0.0.0.0"
+SERVER = 'localhost'
+# SERVER = "0.0.0.0"
 ADDRESS = (SERVER, PORT)
 
 receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

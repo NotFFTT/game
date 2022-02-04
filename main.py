@@ -26,8 +26,8 @@ HEALTH_NUMBER_OFFSET_Y = -20
 # SERVER
 PORT = 8080
 HEADER = 64
-SERVER = "143.198.247.145"
-# SERVER = 'localhost'
+# SERVER = "143.198.247.145"
+SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 
@@ -340,19 +340,7 @@ class Player(arcade.Sprite):
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
 
-class TitleView(arcade.View):
-    def on_show(self):
-        arcade.set_background_color(arcade.csscolor.DARK_SLATE_BLUE)
-        arcade.set_viewport(0, self.window.width, 0, self.window.height)
 
-    def on_draw(self):
-        self.clear()
-        arcade.draw_text("APPLE SMASH", self.window.width/2 , self.window.height/2, arcade.color.WHITE, font_size=20, anchor_x="center")
-
-    def on_mouse_press(self, _x, _y, _button, _modifiers ):
-        game_view = Game()
-        self.window.show_view(game_view)
-        game_view.setup()
 
 class Game(arcade.View):
     def __init__(self):
@@ -618,6 +606,7 @@ class Game(arcade.View):
 
        
 def main():
+    from title import TitleView
     thread = threading.Thread(target=get_server_data, args=())
     thread.start()
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
