@@ -378,18 +378,22 @@ class Game(arcade.Window):
                 CHARACTER_SELECTION = 0
                 self.player.character_selection = 0
                 self.player.load_character_textures()
+                arcade.play_sound(self.sword_attack)
             elif symbol == arcade.key.KEY_2 and self.player.state != "sp_atk":
                 CHARACTER_SELECTION = 1
                 self.player.character_selection = 1
                 self.player.load_character_textures()
+                arcade.play_sound(self.sword_attack)
             elif symbol == arcade.key.KEY_3 and self.player.state != "sp_atk":
                 CHARACTER_SELECTION = 2
                 self.player.character_selection = 2
                 self.player.load_character_textures()
+                arcade.play_sound(self.sword_attack)
             elif symbol == arcade.key.KEY_4 and self.player.state != "sp_atk":
                 CHARACTER_SELECTION = 3
                 self.player.character_selection = 3
                 self.player.load_character_textures()
+                arcade.play_sound(self.sword_attack)
                     
             # ATTACKS
             elif symbol == arcade.key.E:
@@ -397,7 +401,7 @@ class Game(arcade.Window):
                 arcade.play_sound(self.sword_sound)
                 self.player.animation_start = time.time_ns()
             elif symbol == arcade.key.R:
-                if self.player.change_y == 0:
+                if abs(self.player.change_y) <= 0.5 or arcade.check_for_collision_with_list(self.player, self.scene['floor']):
                     self.player.state = "sp_atk"
                     arcade.play_sound(self.sword_attack)
                     self.player.animation_start = time.time_ns()
