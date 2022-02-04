@@ -23,7 +23,7 @@ PLAYER_JUMP_SPEED = 5
 HEALTHBAR_WIDTH = 80
 HEALTHBAR_HEIGHT = 20
 HEALTHBAR_OFFSET_Y = -10
-HEALTH_NUMBER_OFFSET_X = -20
+HEALTH_NUMBER_OFFSET_X = -42
 HEALTH_NUMBER_OFFSET_Y = -20
 CHARACTER_SELECTION = 0
 
@@ -180,7 +180,6 @@ class Player(arcade.Sprite):
             self.character_type = "earth"
 
         idle = []
-
         for i in range(self.sprite_info[self.character_type]["idle_qty"]):
             idle.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["idle_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
 
@@ -213,6 +212,8 @@ class Player(arcade.Sprite):
             'death': death,
         }
 
+        self.texture = self.animation_cells['idle'][0][self.direction]
+
     def load_texture_pair_modified(self, filename, x, y, width, height, hit_box_algorithm: str = "Simple"):
         return [
             arcade.load_texture(filename, x, y, width, height, hit_box_algorithm=hit_box_algorithm),
@@ -228,12 +229,18 @@ class Player(arcade.Sprite):
             self.state = 'jump'
         elif self.change_x > 0:
             if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
-                self.state = 'run'
                 self.direction = 0
+                if self.state != 'run' and self.state != 'jump':
+                    self.texture = self.animation_cells['run'][0][self.direction]
+                    self.set_hit_box(self.texture.hit_box_points)
+                self.state = 'run'
         elif self.change_x < 0:
             if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
-                self.state = 'run'
                 self.direction = 1
+                if self.state != 'run' and self.state != 'jump':
+                    self.texture = self.animation_cells['run'][0][self.direction]
+                    self.set_hit_box(self.texture.hit_box_points)
+                self.state = 'run'
         elif self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death':
                 self.state = 'idle'
         
@@ -343,7 +350,7 @@ class Game(arcade.Window):
         # SETUP OTHER PLAYERS
         self.players_list = arcade.SpriteList()
         for i in range(4):
-            self.players_list.append(sprite=Player(character_selection=CHARACTER_SELECTION))
+            self.players_list.append(sprite=Player(character_selection='CHARACTER_SELECTION'))
 
         # SETUP PHYSICS
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
@@ -423,13 +430,13 @@ class Game(arcade.Window):
         # Draw client player
         if not self.player:
             self.setup()
-        self.player.draw()
         #self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
 
         # Draw other players
         for player in self.players_list:
             #if player.player_number != self.player.player_number:
             player.draw()
+        self.player.draw()
         
         # Draw UI
         self.draw_healthbars()
@@ -442,13 +449,13 @@ class Game(arcade.Window):
             self.player.center_y + self.player.height/3,
             width=115,
             height=25,
-            color=arcade.color.WHITE,
+            color=(253, 238, 0, 200),
         )
 
         arcade.draw_text(
             "Player " + str(self.player.player_number + 1),
             self.player.center_x - 115/2,
-            self.player.center_y + self.player.height/3,
+            self.player.center_y + self.player.height/3 - 5,
             arcade.color.BLACK,
             font_size = 12,
             bold=True,
@@ -464,12 +471,12 @@ class Game(arcade.Window):
                     player.center_y + player.height/3,
                     width=115,
                     height=25,
-                    color=arcade.color.WHITE,
+                    color=(255, 255, 255, 100),
                 )
                 arcade.draw_text(
                     "Player " + str(player.player_number + 1),
                     player.center_x - 115/2,
-                    player.center_y + player.height/3,
+                    player.center_y + player.height/3 - 5,
                     arcade.color.BLACK,
                     font_size = 12,
                     bold=True,
@@ -484,31 +491,41 @@ class Game(arcade.Window):
             
             health_width = HEALTHBAR_WIDTH * (player.curr_health / self.max_health)
             x = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
+            r = 255 * (self.max_health - player.curr_health) / self.max_health
+            g = 255 * 2 * player.curr_health / self.max_health if player.curr_health < self.max_health/2 else 255
+            b = 20
             
             arcade.draw_rectangle_filled(center_x = x,
-                            center_y=40 + HEALTHBAR_OFFSET_Y,
+                            center_y=20+40 + HEALTHBAR_OFFSET_Y,
                             width=HEALTHBAR_WIDTH,
                             height=HEALTHBAR_HEIGHT,
-                            color=arcade.color.BLACK
+                            color=(r, g, b)
             )
 
-            arcade.draw_rectangle_filled(center_x=x - .5 * (HEALTHBAR_WIDTH - health_width),
-                                        center_y=40 + HEALTHBAR_OFFSET_Y,
-                                        width=health_width,
-                                        height=HEALTHBAR_HEIGHT,
-                                        color=arcade.color.GREEN
-            )
+            # arcade.draw_rectangle_filled(center_x = x,
+            #                 center_y=40 + HEALTHBAR_OFFSET_Y,
+            #                 width=HEALTHBAR_WIDTH,
+            #                 height=HEALTHBAR_HEIGHT,
+            #                 color=arcade.color.BLACK
+            # )
+
+            # arcade.draw_rectangle_filled(center_x=x - .5 * (HEALTHBAR_WIDTH - health_width),
+            #                             center_y=40 + HEALTHBAR_OFFSET_Y,
+            #                             width=health_width,
+            #                             height=HEALTHBAR_HEIGHT,
+            #                             color=arcade.color.GREEN
+            # )
             
-            arcade.draw_text(f"{round(float(player.curr_health/self.max_health) * 100)}%",
-                            start_x = x + HEALTH_NUMBER_OFFSET_X,
-                            start_y = 40 + HEALTH_NUMBER_OFFSET_Y,
-                            font_size=14,
-                            color=arcade.color.WHITE
-            )
+            # arcade.draw_text(f"{round(float(player.curr_health/self.max_health) * 100)}%",
+            #                 start_x = x + HEALTH_NUMBER_OFFSET_X,
+            #                 start_y = 40 + HEALTH_NUMBER_OFFSET_Y,
+            #                 font_size=14,
+            #                 color=arcade.color.WHITE
+            # )
 
             arcade.draw_text(f"PLAYER {index + 1}",
                             start_x = x + HEALTH_NUMBER_OFFSET_X,
-                            start_y = 65 + HEALTH_NUMBER_OFFSET_Y,
+                            start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
                             font_size=14,
                             color=arcade.color.WHITE
             )
@@ -540,7 +557,7 @@ class Game(arcade.Window):
                 "vy": self.player.change_y,
                 "dam": self.damage_change,
                 "st": self.player.state,
-                "c": CHARACTER_SELECTION,
+                "c": self.player.character_selection,
             }
 
         self.send(send_data)
@@ -554,13 +571,12 @@ class Game(arcade.Window):
                 server_change_x = float(received_list[index]["vx"])
                 server_change_y = float(received_list[index]["vy"])
                 server_state = str(received_list[index]["st"])
-                server_character_selection = str(received_list[index]["c"])
+                server_character_selection = int(received_list[index]["c"])
 
                 player.player_number = index
                 if player.character_selection != server_character_selection:
                     player.character_selection = server_character_selection
                     player.load_character_textures()
-                    print('hi')
 
                 if index == self.player.player_number:
                     if self.player.center_y < -1000:
