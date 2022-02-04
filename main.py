@@ -25,7 +25,7 @@ HEALTHBAR_HEIGHT = 20
 HEALTHBAR_OFFSET_Y = -10
 HEALTH_NUMBER_OFFSET_X = -20
 HEALTH_NUMBER_OFFSET_Y = -20
-CHARACTER_SELECTION = 3
+CHARACTER_SELECTION = 0
 
 # SERVER
 PORT = 8080
@@ -138,14 +138,14 @@ class Player(arcade.Sprite):
                 "idle_qty": 8,
                 "run_qty": 8,
                 "atk_1_qty": 8,
-                "sp_atk_qty": 30,
+                "sp_atk_qty": 26,
                 "jump_qty": 2,
                 "death_qty": 12,
 
                 "idle_row": 0,
                 "run_row": 1,
                 "atk_1_row": 5,
-                "sp_atk_row": 8,
+                "sp_atk_row": 7,
                 "jump_row": 3,
                 "death_row": 11,
             },
@@ -209,20 +209,20 @@ class Player(arcade.Sprite):
 
     def on_update(self, delta_time):
         self.update_animation(delta_time)
-        if self.curr_health <= 0:
-                self.state = 'death'
-                self.animation_start = time.time_ns()
-        elif abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk'):
+        # if self.curr_health <= 0:
+        #         self.state = 'death'
+        #         self.animation_start = time.time_ns()
+        if abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death'):
             self.state = 'jump'
         elif self.change_x > 0:
-            if self.state != 'atk_1' and self.state != 'sp_atk':
+            if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
                 self.state = 'run'
                 self.direction = 0
         elif self.change_x < 0:
-            if self.state != 'atk_1' and self.state != 'sp_atk':
+            if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
                 self.state = 'run'
                 self.direction = 1
-        elif self.state != 'atk_1' and self.state != 'sp_atk':
+        elif self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death':
                 self.state = 'idle'
         
     def update_animation(self, delta_time):
@@ -288,6 +288,10 @@ class Player(arcade.Sprite):
             time_now = time.time_ns()
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
+            if current_animation_frame + 1 > number_of_frames:
+                self.texture = self.animation_cells[self.state][number_of_frames - 1][self.direction]
+            else:
+                self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
 
 
 class Game(arcade.Window):
@@ -335,32 +339,52 @@ class Game(arcade.Window):
 
     def on_key_press(self, symbol: int, modifiers: int):
 
-        # DIRECTIONAL
-        if symbol == arcade.key.RIGHT or symbol == arcade.key.D:
-            if self.player.state != "sp_atk":
-                self.player.change_x = PLAYER_MOVEMENT_SPEED
-        elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
-            if self.player.state != "sp_atk":
-                self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
-        elif symbol == arcade.key.UP or symbol == arcade.key.W or symbol == arcade.key.SPACE:
-            if self.physics_engine.can_jump() and self.player.state != "sp_atk":
-                self.player.change_y = PLAYER_JUMP_SPEED
-                arcade.play_sound(self.male_jump)
-                self.physics_engine.increment_jump_counter()
-                
-        # ATTACKS
-        elif symbol == arcade.key.E:
-            self.player.state = "atk_1"
-            arcade.play_sound(self.sword_sound)
-            self.player.animation_start = time.time_ns()
-        elif symbol == arcade.key.R:
-            if self.player.change_y == 0:
-                self.player.state = "sp_atk"
-                arcade.play_sound(self.sword_attack)
+        if self.player.state != 'death':
+
+            # DIRECTIONAL
+            if symbol == arcade.key.RIGHT or symbol == arcade.key.D:
+                if self.player.state != "sp_atk":
+                    self.player.change_x = PLAYER_MOVEMENT_SPEED
+            elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
+                if self.player.state != "sp_atk":
+                    self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
+            elif symbol == arcade.key.UP or symbol == arcade.key.W or symbol == arcade.key.SPACE:
+                if self.physics_engine.can_jump() and self.player.state != "sp_atk":
+                    self.player.change_y = PLAYER_JUMP_SPEED
+                    arcade.play_sound(self.male_jump)
+                    self.physics_engine.increment_jump_counter()
+
+            # CHARACTER CHANGE
+            if symbol == arcade.key.KEY_1 and self.player.state != "sp_atk":
+                CHARACTER_SELECTION = 0
+                self.player.character_selection = 0
+                self.player.load_character_textures()
+            elif symbol == arcade.key.KEY_2 and self.player.state != "sp_atk":
+                CHARACTER_SELECTION = 1
+                self.player.character_selection = 1
+                self.player.load_character_textures()
+            elif symbol == arcade.key.KEY_3 and self.player.state != "sp_atk":
+                CHARACTER_SELECTION = 2
+                self.player.character_selection = 2
+                self.player.load_character_textures()
+            elif symbol == arcade.key.KEY_4 and self.player.state != "sp_atk":
+                CHARACTER_SELECTION = 3
+                self.player.character_selection = 3
+                self.player.load_character_textures()
+                    
+            # ATTACKS
+            elif symbol == arcade.key.E:
+                self.player.state = "atk_1"
+                arcade.play_sound(self.sword_sound)
                 self.player.animation_start = time.time_ns()
+            elif symbol == arcade.key.R:
+                if self.player.change_y == 0:
+                    self.player.state = "sp_atk"
+                    arcade.play_sound(self.sword_attack)
+                    self.player.animation_start = time.time_ns()
         
         # QUIT
-        elif symbol == arcade.key.ESCAPE:
+        if symbol == arcade.key.ESCAPE:
             self.send("DISCONNECT")
             arcade.exit()
             
@@ -498,7 +522,6 @@ class Game(arcade.Window):
 
         # Loop through the other_players_list and update their values to client.recv
         index = 0
-        print(received_list)
         try:
             for player in self.players_list:
                 server_center_x = float(received_list[index]["x"])
@@ -545,23 +568,31 @@ class Game(arcade.Window):
                     if index == self.player.player_number:
                         self.player.curr_health -= value["dam"][index]
                     player.curr_health -= value["dam"][index]
+                
+                # Trigger death animation on any player (client or other players) whose health is equal to or less than zero.
+                if self.player.curr_health <= 0:
+                    player.curr_health = 0
+                    self.player.state = 'death'
+                    self.player.animation_start = time.time_ns()
+                if player.state == "death":
+                    player.curr_health = 0
 
                 index += 1
 
         except Exception as e:
             print("Error in players list loop: ", e)
 
-        # Decrement Health On Attack Collision
+        # Decrement health to other players on attack collision. Damage/hit is determined on client side (attacker's side) first.
         self.damage_change = [0,0,0,0]
         if self.player.state == 'atk_1':
             player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
-
             for player in player_hit_list:
-                #player.curr_health -= 5*delta_time
-                self.damage_change[player.player_number] = 25*delta_time
-                if player.curr_health < 0:
-                    player.curr_health = 0
-                    continue # TODO: kill player
+                self.damage_change[player.player_number] = 20*delta_time
+        if self.player.state == 'sp_atk':
+            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
+            for player in player_hit_list:
+                self.damage_change[player.player_number] = 100*delta_time
+
 
         self.players_list.update()
         self.players_list.on_update()
