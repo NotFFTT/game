@@ -9,6 +9,9 @@ Apple Smash is an online multiplayer battle game allowing up to four unique play
 - Open terminal, cd into root directory of Game
 - Execute game with ```python main.py```
 - Enjoy!
+- Example: git clone [this repo] -> poetry install -> poetry shell -> python main.py
+
+Note: will need to host server (found in sockets/server2.py) somewhere that is able to run a python script and sockets. This can be done locally (switch global ADDRESS constant to 'localhost', for example), but this may be cause a challenge getting clients not on your network to access it. Instead, it might be easiest to open up a droplet on Digital Ocean, open up a console to the droplet, and paste the server2.py file into it (eg: touch a new file -> sudo nano to modify the file -> copy/paste the code and save it -> and then run it using a python3 server2.py command. No dependencies are needed for the server.
 
 ## Controls
 
