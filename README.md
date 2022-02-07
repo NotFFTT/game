@@ -4,12 +4,12 @@ Apple Smash is an online multiplayer battle game allowing up to four unique play
 
 # Resources
 
-- Source code: https://github.com/NotFFTT/game
 - Character sprites: https://chierit.itch.io
 - Tiled Map Editor: https://www.mapeditor.org
+- Source code: https://github.com/NotFFTT/game
 - Python Arcade library: https://api.arcade.academy/en/latest/
+- Python Arcade sockets example: https://github.com/Cleptomania/square_game
 - Socket programming guide: https://youtu.be/3QiPPX-KeSc
-- Python Arcade sockets example: https://github.com/Cleptomania/square...
 - Python documentation: https://docs.python.org/3/library/
 - Server hosting: https://www.digitalocean.com
 
