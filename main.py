@@ -1,6 +1,3 @@
-from ast import Pass
-from ctypes.wintypes import CHAR
-from locale import currency
 import arcade
 import socket
 import pickle
@@ -31,8 +28,8 @@ CHARACTER_SELECTION = 0
 PORT = 8080
 PORT2 = 5007
 HEADER = 64
-SERVER = "143.198.247.145"
-#SERVER = 'localhost'
+# SERVER = "143.198.247.145"
+SERVER = 'localhost'
 ADDRESS = (SERVER, PORT)
 FORMAT = 'utf-8'
 

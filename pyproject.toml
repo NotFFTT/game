@@ -10,6 +10,7 @@ black = "^22.1.0"
 flake8 = "^4.0.1"
 pillow = "9.0.0"
 arcade = "^2.6.10"
+Pillow = "9.0.0"
 
 [tool.poetry.dev-dependencies]
 
