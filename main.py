@@ -243,7 +243,7 @@ class Player(arcade.Sprite):
                 self.texture = self.animation_cells[self.state][0][self.direction]
             if self.change_y < 0:
                 self.texture = self.animation_cells[self.state][1][self.direction]
-            #self.set_hit_box(self.texture.hit_box_points)
+
 
         if self.state == 'idle':
             number_of_frames = self.sprite_info[self.character_type]["idle_qty"]
@@ -252,7 +252,7 @@ class Player(arcade.Sprite):
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-            #self.set_hit_box(self.texture.hit_box_points)
+
 
         if self.state == 'run':
             number_of_frames = self.sprite_info[self.character_type]["run_qty"]
@@ -261,7 +261,7 @@ class Player(arcade.Sprite):
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-            #self.set_hit_box(self.texture.hit_box_points)
+
 
         elif self.state == "atk_1":
             number_of_frames = self.sprite_info[self.character_type]["atk_1_qty"]
@@ -393,7 +393,7 @@ class Game(arcade.Window):
                 arcade.play_sound(self.sword_sound)
                 self.player.animation_start = time.time_ns()
             elif symbol == arcade.key.R:
-                if abs(self.player.change_y) <= 0.5: # or arcade.check_for_collision_with_list(self.player, self.scene['floor']):
+                if abs(self.player.change_y) <= 0.5: 
                     self.player.state = "sp_atk"
                     arcade.play_sound(self.sword_attack)
                     self.player.animation_start = time.time_ns()
@@ -426,11 +426,9 @@ class Game(arcade.Window):
         # Draw client player
         if not self.player:
             self.setup()
-        #self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
 
         # Draw other players
         for player in self.players_list:
-            #if player.player_number != self.player.player_number:
             player.draw()
         self.player.draw()
         
@@ -538,11 +536,6 @@ class Game(arcade.Window):
         self.player.on_update(delta_time)
         self.physics_engine.update()
 
-        # Trigger death animation on current player when equal to or less than zero.
-        # if self.player.curr_health <= 0:
-        #     self.player.curr_health = 0
-        #     self.player.state = 'death'
-        #     self.player.animation_start = time.time_ns()
         
         send_data = {
                 "x": self.player.center_x,
@@ -625,46 +618,6 @@ class Game(arcade.Window):
 
         self.players_list.update()
         self.players_list.on_update()
-
-# class TitleView(arcade.View):
-#     def __init__(self):
-#         super().__init__()
-#         self.manager = arcade.gui.UIManager()
-#         self.manager.enable()
-#         self.v_box = arcade.gui.UIBoxLayout()
-        
-#         start_button = arcade.gui.UIFlatButton(text="Start", width=150)
-#         self.v_box.add(start_button.with_space_around(bottom=10))
-        
-#         @start_button.event('on_click')
-#         def on_click_start(event):
-#             self.manager.disable()
-#             game_view = Game()
-#             self.window.show_view(game_view)
-#             game_view.setup()
-            
-#         self.manager.add(
-#             arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
-        
-#     def on_show(self):
-#         arcade.set_background_color(arcade.csscolor.DARK_SLATE_BLUE)
-#         arcade.set_viewport(0, self.window.width, 0, self.window.height)
-
-#     def on_draw(self):
-#         self.clear()
-#         arcade.draw_text("APPLE SMASH", self.window.width/2 , 380, arcade.color.WHITE, font_size=20, anchor_x="center",)
-#         self.manager.draw()
-
-
-# def main():
-#     #from title import TitleView
-#     thread = threading.Thread(target=get_server_data, args=())
-#     thread.start()
-#     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-#     start_view = TitleView()
-#     window.show_view(start_view)
-#     #start_view.setup()
-#     arcade.run()
 
        
 def main():
