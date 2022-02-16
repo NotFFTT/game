@@ -54,11 +54,10 @@ def get_server_data():
     while True:
         try:
             received = receiving_socket.recv(2048)
-            #print(sys.getsizeof(received))
+
             data = pickle.loads(received)
             if isinstance(data, dict) and set(data.keys()) == {0, 1, 2, 3}:
                 received_list = data
-                #print(received_list)
             else:
                 print("Data not in expected format in get_server_data: ", data)
         except Exception as e:
@@ -528,28 +527,7 @@ class Game(arcade.Window):
             sending_socket.send(message)
         except Exception as e:
             print("Error in send method: ", e)
-
-    def on_update(self, delta_time):
-        if not self.player:
-            self.setup()
-        self.player.update()
-        self.player.on_update(delta_time)
-        self.physics_engine.update()
-
-        
-        send_data = {
-                "x": self.player.center_x,
-                "y": self.player.center_y,
-                "vx": self.player.change_x,
-                "vy": self.player.change_y,
-                "dam": self.damage_change,
-                "st": self.player.state,
-                "c": self.player.character_selection,
-            }
-
-        self.send(send_data)
-
-        # Loop through the other_players_list and update their values to client.recv
+    def update_player_data(self):
         index = 0
         try:
             for player in self.players_list:
@@ -604,6 +582,29 @@ class Game(arcade.Window):
 
         except Exception as e:
             print("Error in players list loop: ", e)
+
+    def on_update(self, delta_time):
+        if not self.player:
+            self.setup()
+        self.player.update()
+        self.player.on_update(delta_time)
+        self.physics_engine.update()
+
+        
+        send_data = {
+                "x": self.player.center_x,
+                "y": self.player.center_y,
+                "vx": self.player.change_x,
+                "vy": self.player.change_y,
+                "dam": self.damage_change,
+                "st": self.player.state,
+                "c": self.player.character_selection,
+            }
+
+        self.send(send_data)
+
+        # Loop through the other_players_list and update their values to client.recv
+        self.update_player_data()
 
         # Decrement health to other players on attack collision. Damage/hit is determined on client side (attacker's side) first.
         self.damage_change = [0,0,0,0]
