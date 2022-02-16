@@ -597,6 +597,18 @@ class Game(arcade.Window):
         except Exception as e:
             print("Error in players list loop: ", e)
 
+    def update_damage_inflicted(self, delta_time):
+        # Decrement health to other players on attack collision. Damage/hit is determined on client side (attacker's side) first.
+        self.damage_change = [0,0,0,0]
+        if self.player.state == 'atk_1':
+            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
+            for player in player_hit_list:
+                self.damage_change[player.player_number] = 20*delta_time
+        if self.player.state == 'sp_atk':
+            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
+            for player in player_hit_list:
+                self.damage_change[player.player_number] = 100*delta_time
+
     def on_update(self, delta_time):
         if not self.player:
             self.setup()
@@ -610,16 +622,7 @@ class Game(arcade.Window):
         # Loop through the other_players_list and update their values to client.recv
         self.update_player_data()
 
-        # Decrement health to other players on attack collision. Damage/hit is determined on client side (attacker's side) first.
-        self.damage_change = [0,0,0,0]
-        if self.player.state == 'atk_1':
-            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
-            for player in player_hit_list:
-                self.damage_change[player.player_number] = 20*delta_time
-        if self.player.state == 'sp_atk':
-            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
-            for player in player_hit_list:
-                self.damage_change[player.player_number] = 100*delta_time
+        self.update_damage_inflicted(delta_time)
 
         self.players_list.update()
         self.players_list.on_update()
