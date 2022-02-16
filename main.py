@@ -542,9 +542,9 @@ class Game(arcade.Window):
         self.send_to_server(local_player_data)
 
     def update_player_data(self):
-        index = 0
+
         try:
-            for player in self.players_list:
+            for index, player in enumerate(self.players_list):
                 server_center_x = float(received_list[index]["x"])
                 server_center_y = float(received_list[index]["y"])
                 server_change_x = float(received_list[index]["vx"])
@@ -592,21 +592,19 @@ class Game(arcade.Window):
                     player.curr_health -= value["dam"][index]
                     player.curr_health = 0 if player.curr_health <= 0 else player.curr_health
 
-                index += 1
-
         except Exception as e:
             print("Error in players list loop: ", e)
 
     def update_damage_inflicted(self, delta_time):
         # Decrement health to other players on attack collision. Damage/hit is determined on client side (attacker's side) first.
         self.damage_change = [0,0,0,0]
-        if self.player.state == 'atk_1':
-            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
-            for player in player_hit_list:
+        player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
+
+        for player in player_hit_list:
+            if self.player.state == 'atk_1':
                 self.damage_change[player.player_number] = 20*delta_time
-        if self.player.state == 'sp_atk':
-            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
-            for player in player_hit_list:
+
+            elif self.player.state == 'sp_atk':
                 self.damage_change[player.player_number] = 100*delta_time
 
     def on_update(self, delta_time):
@@ -616,13 +614,14 @@ class Game(arcade.Window):
         self.player.on_update(delta_time)
         self.physics_engine.update()
 
-        
         self.update_server()
 
-        # Loop through the other_players_list and update their values to client.recv
         self.update_player_data()
 
-        self.update_damage_inflicted(delta_time)
+        if self.player.state == 'atk_1' or self.player.state == 'sp_atk':
+            self.update_damage_inflicted(delta_time)
+        else:
+            self.damage_change = [0,0,0,0]
 
         self.players_list.update()
         self.players_list.on_update()
