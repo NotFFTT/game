@@ -334,7 +334,7 @@ class Game(arcade.Window):
         #arcade.play_sound(self.bg_music, volume=0.5)
         
         # SETUP PLAYER
-        self.send('SETUP')
+        self.send_to_server('SETUP')
         player_number = pickle.loads(sending_socket.recv(2048))
         self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
 
@@ -406,7 +406,7 @@ class Game(arcade.Window):
         
         # QUIT
         if symbol == arcade.key.ESCAPE:
-            self.send("DISCONNECT")
+            self.send_to_server("DISCONNECT")
             arcade.exit()
             
     def on_key_release(self, symbol: int, modifiers: int):
@@ -521,12 +521,26 @@ class Game(arcade.Window):
                 )
 
         
-    def send(self, msg):
+    def send_to_server(self, msg):
         try:
             message = pickle.dumps(msg)
             sending_socket.send(message)
         except Exception as e:
             print("Error in send method: ", e)
+
+    def update_server(self):
+        local_player_data = {
+                "x": self.player.center_x,
+                "y": self.player.center_y,
+                "vx": self.player.change_x,
+                "vy": self.player.change_y,
+                "dam": self.damage_change,
+                "st": self.player.state,
+                "c": self.player.character_selection,
+            }
+
+        self.send_to_server(local_player_data)
+
     def update_player_data(self):
         index = 0
         try:
@@ -591,17 +605,7 @@ class Game(arcade.Window):
         self.physics_engine.update()
 
         
-        send_data = {
-                "x": self.player.center_x,
-                "y": self.player.center_y,
-                "vx": self.player.change_x,
-                "vy": self.player.change_y,
-                "dam": self.damage_change,
-                "st": self.player.state,
-                "c": self.player.character_selection,
-            }
-
-        self.send(send_data)
+        self.update_server()
 
         # Loop through the other_players_list and update their values to client.recv
         self.update_player_data()
