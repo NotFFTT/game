@@ -10,6 +10,7 @@ from constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     SCREEN_TITLE,
+    MAP_SELECTION,
     GRAVITY,
     PLAYER_MOVEMENT_SPEED,
     PLAYER_JUMP_SPEED,
@@ -328,7 +329,7 @@ class Game(arcade.Window):
     def setup(self):
 
         # SETUP SCENE
-        self.tile_map = arcade.load_tilemap("assets/maps/map_1/map1.json", scaling=1.4, use_spatial_hash=True)
+        self.tile_map = arcade.load_tilemap(MAP_SELECTION, scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
         #arcade.play_sound(self.bg_music, volume=0.5)
         
