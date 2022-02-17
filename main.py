@@ -331,11 +331,8 @@ class Game(arcade.Window):
         self.setup_scene()
 
         self.setup_player()
-        
-        # SETUP OTHER PLAYERS
-        self.players_list = arcade.SpriteList()
-        for i in range(4):
-            self.players_list.append(sprite=Player(character_selection='CHARACTER_SELECTION'))
+
+        self.setup_remote_players()
 
         # SETUP PHYSICS
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
@@ -352,7 +349,9 @@ class Game(arcade.Window):
         self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
 
     def setup_remote_players(self):
-        pass
+        self.players_list = arcade.SpriteList()
+        for _ in range(4):
+            self.players_list.append(sprite=Player(character_selection='CHARACTER_SELECTION'))
 
     def on_key_press(self, symbol: int, modifiers: int):
 
