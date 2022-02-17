@@ -1,6 +1,3 @@
-from ast import Pass
-from ctypes.wintypes import CHAR
-from locale import currency
 import arcade
 import socket
 import pickle
@@ -9,32 +6,27 @@ import threading
 from pyglet.gl.gl import GL_NEAREST
 import sys
 import arcade.gui
-
-
-# GAME
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 650
-SCREEN_TITLE = "APPLE SMASH!"
-GRAVITY = 0.2
-
-# PLAYER
-PLAYER_MOVEMENT_SPEED = 2
-PLAYER_JUMP_SPEED = 5
-HEALTHBAR_WIDTH = 80
-HEALTHBAR_HEIGHT = 20
-HEALTHBAR_OFFSET_Y = -10
-HEALTH_NUMBER_OFFSET_X = -42
-HEALTH_NUMBER_OFFSET_Y = -20
-CHARACTER_SELECTION = 0
-
-# SERVER
-PORT = 8080
-PORT2 = 5007
-HEADER = 64
-SERVER = "143.198.247.145"
-#SERVER = 'localhost'
+from constants import (
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT,
+    SCREEN_TITLE,
+    GRAVITY,
+    PLAYER_MOVEMENT_SPEED,
+    PLAYER_JUMP_SPEED,
+    HEALTHBAR_WIDTH,
+    HEALTHBAR_HEIGHT,
+    HEALTHBAR_OFFSET_Y,
+    HEALTH_NUMBER_OFFSET_X,
+    HEALTH_NUMBER_OFFSET_Y,
+    CHARACTER_SELECTION,
+    PORT,
+    PORT2,
+    HEADER,
+    SERVER,
+    FORMAT
+)
 ADDRESS = (SERVER, PORT)
-FORMAT = 'utf-8'
+
 
 # socket
 try:
@@ -62,11 +54,10 @@ def get_server_data():
     while True:
         try:
             received = receiving_socket.recv(2048)
-            #print(sys.getsizeof(received))
+
             data = pickle.loads(received)
             if isinstance(data, dict) and set(data.keys()) == {0, 1, 2, 3}:
                 received_list = data
-                #print(received_list)
             else:
                 print("Data not in expected format in get_server_data: ", data)
         except Exception as e:
@@ -251,7 +242,7 @@ class Player(arcade.Sprite):
                 self.texture = self.animation_cells[self.state][0][self.direction]
             if self.change_y < 0:
                 self.texture = self.animation_cells[self.state][1][self.direction]
-            #self.set_hit_box(self.texture.hit_box_points)
+
 
         if self.state == 'idle':
             number_of_frames = self.sprite_info[self.character_type]["idle_qty"]
@@ -260,7 +251,7 @@ class Player(arcade.Sprite):
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-            #self.set_hit_box(self.texture.hit_box_points)
+
 
         if self.state == 'run':
             number_of_frames = self.sprite_info[self.character_type]["run_qty"]
@@ -269,7 +260,7 @@ class Player(arcade.Sprite):
             time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
             current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
             self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-            #self.set_hit_box(self.texture.hit_box_points)
+
 
         elif self.state == "atk_1":
             number_of_frames = self.sprite_info[self.character_type]["atk_1_qty"]
@@ -343,7 +334,7 @@ class Game(arcade.Window):
         #arcade.play_sound(self.bg_music, volume=0.5)
         
         # SETUP PLAYER
-        self.send('SETUP')
+        self.send_to_server('SETUP')
         player_number = pickle.loads(sending_socket.recv(2048))
         self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
 
@@ -401,7 +392,7 @@ class Game(arcade.Window):
                 arcade.play_sound(self.sword_sound)
                 self.player.animation_start = time.time_ns()
             elif symbol == arcade.key.R:
-                if abs(self.player.change_y) <= 0.5: # or arcade.check_for_collision_with_list(self.player, self.scene['floor']):
+                if abs(self.player.change_y) <= 0.5: 
                     self.player.state = "sp_atk"
                     arcade.play_sound(self.sword_attack)
                     self.player.animation_start = time.time_ns()
@@ -415,7 +406,7 @@ class Game(arcade.Window):
         
         # QUIT
         if symbol == arcade.key.ESCAPE:
-            self.send("DISCONNECT")
+            self.send_to_server("DISCONNECT")
             arcade.exit()
             
     def on_key_release(self, symbol: int, modifiers: int):
@@ -434,11 +425,9 @@ class Game(arcade.Window):
         # Draw client player
         if not self.player:
             self.setup()
-        #self.player.draw_hit_box(color=arcade.color.RED, line_thickness=10)
 
         # Draw other players
         for player in self.players_list:
-            #if player.player_number != self.player.player_number:
             player.draw()
         self.player.draw()
         
@@ -532,27 +521,15 @@ class Game(arcade.Window):
                 )
 
         
-    def send(self, msg):
+    def send_to_server(self, msg):
         try:
             message = pickle.dumps(msg)
             sending_socket.send(message)
         except Exception as e:
             print("Error in send method: ", e)
 
-    def on_update(self, delta_time):
-        if not self.player:
-            self.setup()
-        self.player.update()
-        self.player.on_update(delta_time)
-        self.physics_engine.update()
-
-        # Trigger death animation on current player when equal to or less than zero.
-        # if self.player.curr_health <= 0:
-        #     self.player.curr_health = 0
-        #     self.player.state = 'death'
-        #     self.player.animation_start = time.time_ns()
-        
-        send_data = {
+    def update_server(self):
+        local_player_data = {
                 "x": self.player.center_x,
                 "y": self.player.center_y,
                 "vx": self.player.change_x,
@@ -562,12 +539,12 @@ class Game(arcade.Window):
                 "c": self.player.character_selection,
             }
 
-        self.send(send_data)
+        self.send_to_server(local_player_data)
 
-        # Loop through the other_players_list and update their values to client.recv
-        index = 0
+    def update_player_data(self):
+
         try:
-            for player in self.players_list:
+            for index, player in enumerate(self.players_list):
                 server_center_x = float(received_list[index]["x"])
                 server_center_y = float(received_list[index]["y"])
                 server_change_x = float(received_list[index]["vx"])
@@ -615,64 +592,37 @@ class Game(arcade.Window):
                     player.curr_health -= value["dam"][index]
                     player.curr_health = 0 if player.curr_health <= 0 else player.curr_health
 
-                index += 1
-
         except Exception as e:
             print("Error in players list loop: ", e)
 
+    def update_damage_inflicted(self, delta_time):
         # Decrement health to other players on attack collision. Damage/hit is determined on client side (attacker's side) first.
+        attack_damage = {'atk_1': 20 * delta_time, 'sp_atk': 100 * delta_time}  
         self.damage_change = [0,0,0,0]
-        if self.player.state == 'atk_1':
-            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
-            for player in player_hit_list:
-                self.damage_change[player.player_number] = 20*delta_time
-        if self.player.state == 'sp_atk':
-            player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
-            for player in player_hit_list:
-                self.damage_change[player.player_number] = 100*delta_time
+
+        player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list) 
+        
+        for player in player_hit_list:
+            self.damage_change[player.player_number] = attack_damage.get(self.player.state)
+
+    def on_update(self, delta_time):
+        if not self.player:
+            self.setup()
+        self.player.update()
+        self.player.on_update(delta_time)
+        self.physics_engine.update()
+
+        self.update_server()
+
+        self.update_player_data()
+
+        if self.player.state == 'atk_1' or self.player.state == 'sp_atk':
+            self.update_damage_inflicted(delta_time)
+        else:
+            self.damage_change = [0,0,0,0]
 
         self.players_list.update()
         self.players_list.on_update()
-
-# class TitleView(arcade.View):
-#     def __init__(self):
-#         super().__init__()
-#         self.manager = arcade.gui.UIManager()
-#         self.manager.enable()
-#         self.v_box = arcade.gui.UIBoxLayout()
-        
-#         start_button = arcade.gui.UIFlatButton(text="Start", width=150)
-#         self.v_box.add(start_button.with_space_around(bottom=10))
-        
-#         @start_button.event('on_click')
-#         def on_click_start(event):
-#             self.manager.disable()
-#             game_view = Game()
-#             self.window.show_view(game_view)
-#             game_view.setup()
-            
-#         self.manager.add(
-#             arcade.gui.UIAnchorWidget(anchor_x="center_x", anchor_y="center_y", child=self.v_box))
-        
-#     def on_show(self):
-#         arcade.set_background_color(arcade.csscolor.DARK_SLATE_BLUE)
-#         arcade.set_viewport(0, self.window.width, 0, self.window.height)
-
-#     def on_draw(self):
-#         self.clear()
-#         arcade.draw_text("APPLE SMASH", self.window.width/2 , 380, arcade.color.WHITE, font_size=20, anchor_x="center",)
-#         self.manager.draw()
-
-
-# def main():
-#     #from title import TitleView
-#     thread = threading.Thread(target=get_server_data, args=())
-#     thread.start()
-#     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-#     start_view = TitleView()
-#     window.show_view(start_view)
-#     #start_view.setup()
-#     arcade.run()
 
        
 def main():
