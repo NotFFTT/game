@@ -328,7 +328,7 @@ class Game(arcade.Window):
     def setup(self):
 
         # SETUP SCENE
-        self.tile_map = arcade.load_tilemap("assets/maps/map1.json", scaling=1.4, use_spatial_hash=True)
+        self.tile_map = arcade.load_tilemap("assets/maps/map_1/map1.json", scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
         #arcade.play_sound(self.bg_music, volume=0.5)
         
