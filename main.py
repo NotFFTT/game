@@ -307,7 +307,7 @@ class Player(arcade.Sprite):
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
         super().__init__(width=width, height=height, title=title)
-        arcade.set_background_color((59, 142, 96))
+        # arcade.set_background_color((59, 142, 96))
 
         # NEEDED
         self.player = None
