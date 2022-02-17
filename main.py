@@ -328,11 +328,11 @@ class Game(arcade.Window):
         
     def setup(self):
 
-        # SETUP SCENE
-        self.tile_map = arcade.load_tilemap(MAP_SELECTION, scaling=1.4, use_spatial_hash=True)
-        self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        #arcade.play_sound(self.bg_music, volume=0.5)
-        
+        # # SETUP SCENE
+        # self.tile_map = arcade.load_tilemap(MAP_SELECTION, scaling=1.4, use_spatial_hash=True)
+        # self.scene = arcade.Scene.from_tilemap(self.tile_map)
+        # #arcade.play_sound(self.bg_music, volume=0.5)
+        self.setup_scene()
         # SETUP PLAYER
         self.send_to_server('SETUP')
         player_number = pickle.loads(sending_socket.recv(2048))
@@ -346,6 +346,17 @@ class Game(arcade.Window):
         # SETUP PHYSICS
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
         self.physics_engine.enable_multi_jump(2)
+
+    def setup_scene(self):
+        self.tile_map = arcade.load_tilemap(MAP_SELECTION, scaling=1.4, use_spatial_hash=True)
+        self.scene = arcade.Scene.from_tilemap(self.tile_map)
+        #arcade.play_sound(self.bg_music, volume=0.5)
+
+    def setup_player(self):
+        pass
+
+    def setup_remote_players(self):
+        pass
 
     def on_key_press(self, symbol: int, modifiers: int):
 
