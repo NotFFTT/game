@@ -324,33 +324,33 @@ class Game(arcade.Window):
         self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
         self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
         self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
-        #self.bg_music = arcade.load_sound("assets/sounds/2019-01-22_-_Ready_to_Fight_-_David_Fesliyan.wav")
+        # self.bg_music = arcade.load_sound("assets/sounds/2019-01-22_-_Ready_to_Fight_-_David_Fesliyan.wav")
         
     def setup(self):
 
-        self.setup_scene()
+        self.setup_scene(MAP_SELECTION)
 
-        self.setup_player()
+        self.setup_player(CHARACTER_SELECTION)
 
         self.setup_remote_players()
 
         self.setup_physics_engine()
 
-    def setup_scene(self):
-        self.tile_map = arcade.load_tilemap(MAP_SELECTION, scaling=1.4, use_spatial_hash=True)
+    def setup_scene(self, map_path):
+        self.tile_map = arcade.load_tilemap(map_path, scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        #arcade.play_sound(self.bg_music, volume=0.5)
+        # arcade.play_sound(self.bg_music, volume=0.5)
 
-    def setup_player(self):
+    def setup_player(self, character_index):
         self.send_to_server('SETUP')
         player_number = pickle.loads(sending_socket.recv(2048))
-        self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
+        self.player = Player(player_number=player_number, character_selection=character_index) 
 
-    def setup_remote_players(self):
+    def setup_remote_players(self, number_of_players=4):
         self.players_list = arcade.SpriteList()
-        for _ in range(4):
-            self.players_list.append(sprite=Player(character_selection='CHARACTER_SELECTION'))
-            
+        for _ in range(number_of_players):
+            self.players_list.append(sprite=Player())
+
     def setup_physics_engine(self):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
         self.physics_engine.enable_multi_jump(2)
