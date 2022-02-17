@@ -334,9 +334,7 @@ class Game(arcade.Window):
 
         self.setup_remote_players()
 
-        # SETUP PHYSICS
-        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
-        self.physics_engine.enable_multi_jump(2)
+        self.setup_physics_engine()
 
     def setup_scene(self):
         self.tile_map = arcade.load_tilemap(MAP_SELECTION, scaling=1.4, use_spatial_hash=True)
@@ -352,6 +350,10 @@ class Game(arcade.Window):
         self.players_list = arcade.SpriteList()
         for _ in range(4):
             self.players_list.append(sprite=Player(character_selection='CHARACTER_SELECTION'))
+            
+    def setup_physics_engine(self):
+        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
+        self.physics_engine.enable_multi_jump(2)
 
     def on_key_press(self, symbol: int, modifiers: int):
 
