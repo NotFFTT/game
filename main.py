@@ -599,13 +599,17 @@ class Game(arcade.Window):
         # Decrement health to other players on attack collision. Damage/hit is determined on client side (attacker's side) first.
         self.damage_change = [0,0,0,0]
         player_hit_list = arcade.check_for_collision_with_list(self.player, self.players_list)
-
+         
+        attack_damage = {'atk_1': 20 * delta_time, 'sp_atk': 100 * delta_time}  
+        
         for player in player_hit_list:
-            if self.player.state == 'atk_1':
-                self.damage_change[player.player_number] = 20*delta_time
+            self.damage_change[player.player_number] = attack_damage.get(self.player.state)
 
-            elif self.player.state == 'sp_atk':
-                self.damage_change[player.player_number] = 100*delta_time
+            # if self.player.state == 'atk_1':
+            #     self.damage_change[player.player_number] = 20*delta_time
+
+            # elif self.player.state == 'sp_atk':
+            #     self.damage_change[player.player_number] = 100*delta_time
 
     def on_update(self, delta_time):
         if not self.player:
