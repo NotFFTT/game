@@ -328,16 +328,10 @@ class Game(arcade.Window):
         
     def setup(self):
 
-        # # SETUP SCENE
-        # self.tile_map = arcade.load_tilemap(MAP_SELECTION, scaling=1.4, use_spatial_hash=True)
-        # self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        # #arcade.play_sound(self.bg_music, volume=0.5)
         self.setup_scene()
-        # SETUP PLAYER
-        self.send_to_server('SETUP')
-        player_number = pickle.loads(sending_socket.recv(2048))
-        self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
 
+        self.setup_player()
+        
         # SETUP OTHER PLAYERS
         self.players_list = arcade.SpriteList()
         for i in range(4):
@@ -353,7 +347,9 @@ class Game(arcade.Window):
         #arcade.play_sound(self.bg_music, volume=0.5)
 
     def setup_player(self):
-        pass
+        self.send_to_server('SETUP')
+        player_number = pickle.loads(sending_socket.recv(2048))
+        self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
 
     def setup_remote_players(self):
         pass
