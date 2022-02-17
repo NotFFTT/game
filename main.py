@@ -307,7 +307,6 @@ class Player(arcade.Sprite):
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
         super().__init__(width=width, height=height, title=title)
-        # arcade.set_background_color((59, 142, 96))
 
         # NEEDED
         self.player = None
@@ -329,7 +328,7 @@ class Game(arcade.Window):
     def setup(self):
 
         # SETUP SCENE
-        self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=1.4, use_spatial_hash=True)
+        self.tile_map = arcade.load_tilemap("assets/maps/map1.json", scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
         #arcade.play_sound(self.bg_music, volume=0.5)
         
