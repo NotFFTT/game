@@ -29,7 +29,7 @@ from constants import (
 ADDRESS = (SERVER, PORT)
 from player import Player
 
-# socket
+# Set up sending socket.
 try:
     sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -39,7 +39,7 @@ except:
     sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     sending_socket.connect((SERVER, PORT+1))
 
-# 2nd UDP socket to receive data from server's multicasted server_data.
+# Set up receiving socket.
 try:
     receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
