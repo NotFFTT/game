@@ -10,6 +10,7 @@ from constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     SCREEN_TITLE,
+    MAP_SELECTION,
     GRAVITY,
     PLAYER_MOVEMENT_SPEED,
     PLAYER_JUMP_SPEED,
@@ -26,9 +27,9 @@ from constants import (
     FORMAT
 )
 ADDRESS = (SERVER, PORT)
+from player import Player
 
-
-# socket
+# Set up sending socket.
 try:
     sending_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -38,7 +39,7 @@ except:
     sending_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     sending_socket.connect((SERVER, PORT+1))
 
-# 2nd UDP socket to receive data from server's multicasted server_data.
+# Set up receiving socket.
 try:
     receiving_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     receiving_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -64,250 +65,9 @@ def get_server_data():
             print("get_server_data error, received data:", e)
             pass
 
-class Player(arcade.Sprite):
-    def __init__(self, player_number=0, max_health=100, character_selection=CHARACTER_SELECTION):
-        super().__init__()
-        self.max_health = max_health
-        self.state = 'idle'
-        self.direction = 0
-        self.animation_start = time.time_ns()
-        self.curr_health = max_health
-        self.player_number = player_number
-        self.scale = 1
-        self.center_x = -800
-        self.center_y = -800
-        self.character_selection = character_selection
-        self.character_type = "fire"
-        
-        self.sprite_info = {
-            "water": {
-                "width": 224,
-                "height": 112,
-
-                "idle_qty": 8,
-                "run_qty": 10,
-                "atk_1_qty": 7,
-                "sp_atk_qty": 27,
-                "jump_qty": 2,
-                "death_qty": 16,
-
-                "idle_row": 0,
-                "run_row": 1,
-                "atk_1_row": 6,
-                "sp_atk_row": 8,
-                "jump_row": 3,
-                "death_row": 13,
-            },
-            "fire": {
-                "width": 224,
-                "height": 112,
-
-                "idle_qty": 8,
-                "run_qty": 8,
-                "atk_1_qty": 11,
-                "sp_atk_qty": 18,
-                "jump_qty": 2,
-                "death_qty": 13,
-
-                "idle_row": 0,
-                "run_row": 1,
-                "atk_1_row": 6,
-                "sp_atk_row": 9,
-                "jump_row": 3,
-                "death_row": 12,
-            },
-            "earth": {
-                "width": 288,
-                "height": 128,
-
-                "idle_qty": 6,
-                "run_qty": 8,
-                "atk_1_qty": 6,
-                "sp_atk_qty": 25,
-                "jump_qty": 2,
-                "death_qty": 14,
-
-                "idle_row": 0,
-                "run_row": 1,
-                "atk_1_row": 4,
-                "sp_atk_row": 7,
-                "jump_row": 3,
-                "death_row": 12,
-            },
-            "wind": {
-                "width": 224,
-                "height": 112,
-
-                "idle_qty": 8,
-                "run_qty": 8,
-                "atk_1_qty": 8,
-                "sp_atk_qty": 26,
-                "jump_qty": 2,
-                "death_qty": 19,
-
-                "idle_row": 0,
-                "run_row": 1,
-                "atk_1_row": 5,
-                "sp_atk_row": 7,
-                "jump_row": 3,
-                "death_row": 11,
-            },
-        }
-
-        self.animation_cells = None
-        self.load_character_textures()
-
-        self.texture = self.animation_cells['idle'][0][self.direction]
-
-    def load_character_textures(self):
-
-        if self.character_selection == 0:
-            self.character_type = "fire"
-        elif self.character_selection == 1:
-            self.character_type = "water"
-        elif self.character_selection == 2:
-            self.character_type = "wind"
-        elif self.character_selection == 3:
-            self.character_type = "earth"
-
-        idle = []
-        for i in range(self.sprite_info[self.character_type]["idle_qty"]):
-            idle.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["idle_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
-
-        run = []
-        for i in range(self.sprite_info[self.character_type]["run_qty"]):
-            run.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["run_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
-
-        atk_1 = []
-        for i in range(self.sprite_info[self.character_type]["atk_1_qty"]):
-             atk_1.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["atk_1_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
-
-        sp_atk = []
-        for i in range(self.sprite_info[self.character_type]["sp_atk_qty"]):
-             sp_atk.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["sp_atk_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
-
-        jump = []
-        for i in range(self.sprite_info[self.character_type]["jump_qty"]):
-            jump.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=0, y=(self.sprite_info[self.character_type]["jump_row"] + i)*self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
-
-        death = []
-        for i in range(self.sprite_info[self.character_type]["death_qty"]):
-            death.append(self.load_texture_pair_modified(filename=f"assets/{self.character_type}.png", x=i * self.sprite_info[self.character_type]["width"], y=self.sprite_info[self.character_type]["death_row"] * self.sprite_info[self.character_type]["height"], width=self.sprite_info[self.character_type]["width"], height=self.sprite_info[self.character_type]["height"]))
-
-        self.animation_cells = {
-            'idle': idle,
-            'run': run,
-            'atk_1': atk_1,
-            'sp_atk': sp_atk,
-            'jump': jump,
-            'death': death,
-        }
-
-        self.texture = self.animation_cells['idle'][0][self.direction]
-
-    def load_texture_pair_modified(self, filename, x, y, width, height, hit_box_algorithm: str = "Simple"):
-        return [
-            arcade.load_texture(filename, x, y, width, height, hit_box_algorithm=hit_box_algorithm),
-            arcade.load_texture(filename, x, y, width, height, flipped_horizontally=True, hit_box_algorithm=hit_box_algorithm)
-        ]
-
-    def on_update(self, delta_time):
-        self.update_animation(delta_time)
-        if self.curr_health <= 0 and self.state != 'death':
-                self.state = 'death'
-                self.animation_start = time.time_ns()
-        elif abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death'):
-            self.state = 'jump'
-        elif self.change_x > 0:
-            if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
-                self.direction = 0
-                if self.state != 'run' and self.state != 'jump':
-                    self.texture = self.animation_cells['run'][0][self.direction]
-                    self.set_hit_box(self.texture.hit_box_points)
-                self.state = 'run'
-        elif self.change_x < 0:
-            if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
-                self.direction = 1
-                if self.state != 'run' and self.state != 'jump':
-                    self.texture = self.animation_cells['run'][0][self.direction]
-                    self.set_hit_box(self.texture.hit_box_points)
-                self.state = 'run'
-        elif self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death':
-                self.state = 'idle'
-        
-    def update_animation(self, delta_time):
-
-        if self.state == 'jump':
-            if self.change_y > 0:
-                self.texture = self.animation_cells[self.state][0][self.direction]
-            if self.change_y < 0:
-                self.texture = self.animation_cells[self.state][1][self.direction]
-
-
-        if self.state == 'idle':
-            number_of_frames = self.sprite_info[self.character_type]["idle_qty"]
-            total_animation_time = .5
-            time_now = time.time_ns()
-            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
-            current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
-            self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-
-
-        if self.state == 'run':
-            number_of_frames = self.sprite_info[self.character_type]["run_qty"]
-            total_animation_time = .5
-            time_now = time.time_ns()
-            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
-            current_animation_frame = round(time_diff * number_of_frames / total_animation_time) % number_of_frames
-            self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-
-
-        elif self.state == "atk_1":
-            number_of_frames = self.sprite_info[self.character_type]["atk_1_qty"]
-            total_animation_time = .5
-            time_now = time.time_ns()
-            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
-            current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
-
-            if current_animation_frame + 1 > number_of_frames:
-                self.texture = self.animation_cells['idle'][0][self.direction]
-                self.set_hit_box(self.texture.hit_box_points)
-                self.state = "idle"
-            else:
-                self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-                self.set_hit_box(self.texture.hit_box_points)
-
-        elif self.state == 'sp_atk':
-            number_of_frames = self.sprite_info[self.character_type]["sp_atk_qty"]
-            total_animation_time = 1.5
-            time_now = time.time_ns()
-            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000 # time_diff is in units of seconds
-            current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
-
-            if current_animation_frame + 1 > number_of_frames:
-                self.texture = self.animation_cells['idle'][0][self.direction]
-                self.set_hit_box(self.texture.hit_box_points)
-                self.state = "idle"
-            else:
-                self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-                self.set_hit_box(self.texture.hit_box_points)
-                
-        elif self.state == 'death':
-            number_of_frames = self.sprite_info[self.character_type]["death_qty"]
-            total_animation_time = 1.5
-            time_now = time.time_ns()
-            time_diff = (time_now - self.animation_start) / 1000 / 1000 / 1000
-            current_animation_frame = round(time_diff * number_of_frames / total_animation_time)
-            if current_animation_frame + 1 > number_of_frames:
-                self.texture = self.animation_cells[self.state][number_of_frames - 1][self.direction]
-            else:
-                self.texture = self.animation_cells[self.state][current_animation_frame][self.direction]
-
-
 class Game(arcade.Window):
     def __init__(self, width=SCREEN_WIDTH, height=SCREEN_HEIGHT, title=SCREEN_TITLE):
         super().__init__(width=width, height=height, title=title)
-        arcade.set_background_color((59, 142, 96))
 
         # NEEDED
         self.player = None
@@ -324,28 +84,36 @@ class Game(arcade.Window):
         self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
         self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
         self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
-        #self.bg_music = arcade.load_sound("assets/sounds/2019-01-22_-_Ready_to_Fight_-_David_Fesliyan.wav")
+        # self.bg_music = arcade.load_sound("assets/sounds/2019-01-22_-_Ready_to_Fight_-_David_Fesliyan.wav")
         
     def setup(self):
 
-        # SETUP SCENE
-        self.tile_map = arcade.load_tilemap("assets/map1.json", scaling=1.4, use_spatial_hash=True)
+        self.setup_scene(MAP_SELECTION)
+
+        self.setup_player(CHARACTER_SELECTION)
+
+        self.setup_remote_players(number_of_players=4)
+
+        self.setup_physics_engine(gravity_const=GRAVITY, walls=self.scene["floor"], max_jumps=2)
+
+    def setup_scene(self, map_path):
+        self.tile_map = arcade.load_tilemap(map_path, scaling=1.4, use_spatial_hash=True)
         self.scene = arcade.Scene.from_tilemap(self.tile_map)
-        #arcade.play_sound(self.bg_music, volume=0.5)
-        
-        # SETUP PLAYER
+        # arcade.play_sound(self.bg_music, volume=0.5)
+
+    def setup_player(self, character_index):
         self.send_to_server('SETUP')
         player_number = pickle.loads(sending_socket.recv(2048))
-        self.player = Player(player_number=player_number, character_selection=CHARACTER_SELECTION) 
+        self.player = Player(player_number=player_number, character_selection=character_index) 
 
-        # SETUP OTHER PLAYERS
+    def setup_remote_players(self, number_of_players=4):
         self.players_list = arcade.SpriteList()
-        for i in range(4):
-            self.players_list.append(sprite=Player(character_selection='CHARACTER_SELECTION'))
+        for _ in range(number_of_players):
+            self.players_list.append(sprite=Player())
 
-        # SETUP PHYSICS
-        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = GRAVITY, walls = self.scene["floor"])
-        self.physics_engine.enable_multi_jump(2)
+    def setup_physics_engine(self, gravity_const, walls, max_jumps=2):
+        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = gravity_const, walls = walls)
+        self.physics_engine.enable_multi_jump(max_jumps)
 
     def on_key_press(self, symbol: int, modifiers: int):
 
