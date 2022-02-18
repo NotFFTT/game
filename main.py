@@ -172,7 +172,7 @@ class Game(arcade.Window):
             arcade.key.W: self.jump,
             arcade.key.SPACE: self.jump,
             arcade.key.ESCAPE: self.quit_game,
-            arcade.key.F: self.reset_after_death
+            arcade.key.F: self.reset_after_death,
 
         }
 
@@ -188,9 +188,7 @@ class Game(arcade.Window):
             
     def on_key_release(self, symbol: int, modifiers: int):
         
-        if symbol == arcade.key.RIGHT or symbol == arcade.key.D:
-            self.player.change_x = 0
-        elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
+        if symbol in [arcade.key.RIGHT, arcade.key.D, arcade.key.LEFT, arcade.key.A]:
             self.player.change_x = 0
         
     def on_draw(self):
