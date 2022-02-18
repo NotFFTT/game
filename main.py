@@ -115,67 +115,75 @@ class Game(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = gravity_const, walls = walls)
         self.physics_engine.enable_multi_jump(max_jumps)
 
+    def atk_1(self):
+        self.player.state = "atk_1"
+        arcade.play_sound(self.sword_sound)
+        self.player.animation_start = time.time_ns()
+
+    def sp_atk(self):
+        if abs(self.player.change_y) <= 0.5: 
+            self.player.state = "sp_atk"
+            arcade.play_sound(self.sword_attack)
+            self.player.animation_start = time.time_ns()
+
+    def move_right(self):
+        if self.player.state != "sp_atk":
+            self.player.change_x = PLAYER_MOVEMENT_SPEED
+
+    def move_left(self):
+        if self.player.state != "sp_atk":
+            self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
+
+    def jump(self):
+        if self.physics_engine.can_jump() and self.player.state != "sp_atk":
+            self.player.change_y = PLAYER_JUMP_SPEED
+            arcade.play_sound(self.male_jump)
+            self.physics_engine.increment_jump_counter()
+
+    def quit_game(self):
+        self.send_to_server("DISCONNECT")
+        arcade.exit()
+
+    def change_character(self, character_number):
+        if self.player.state != "sp_atk":
+            print(character_number)
+            CHARACTER_SELECTION = -49 + character_number
+            print(CHARACTER_SELECTION, '<< SELECTION')
+            self.player.character_selection = -49 + character_number
+            self.player.load_character_textures()
+            arcade.play_sound(self.sword_attack)
+
     def on_key_press(self, symbol: int, modifiers: int):
+        
+        handle_key_press = {
+            arcade.key.E: self.atk_1, 
+            arcade.key.R: self.sp_atk,
+            arcade.key.RIGHT: self.move_right,
+            arcade.key.D: self.move_right,
+            arcade.key.LEFT: self.move_left,
+            arcade.key.A: self.move_left,
+            arcade.key.UP: self.jump,
+            arcade.key.W: self.jump,
+            arcade.key.SPACE: self.jump,
+            arcade.key.ESCAPE: self.quit_game,
+
+        }
 
         if self.player.state != 'death':
-
-            # DIRECTIONAL
-            if symbol == arcade.key.RIGHT or symbol == arcade.key.D:
-                if self.player.state != "sp_atk":
-                    self.player.change_x = PLAYER_MOVEMENT_SPEED
-            elif symbol == arcade.key.LEFT or symbol == arcade.key.A:
-                if self.player.state != "sp_atk":
-                    self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
-            elif symbol == arcade.key.UP or symbol == arcade.key.W or symbol == arcade.key.SPACE:
-                if self.physics_engine.can_jump() and self.player.state != "sp_atk":
-                    self.player.change_y = PLAYER_JUMP_SPEED
-                    arcade.play_sound(self.male_jump)
-                    self.physics_engine.increment_jump_counter()
-
             # CHARACTER CHANGE
-            if symbol == arcade.key.KEY_1 and self.player.state != "sp_atk":
-                CHARACTER_SELECTION = 0
-                self.player.character_selection = 0
-                self.player.load_character_textures()
-                arcade.play_sound(self.sword_attack)
-            elif symbol == arcade.key.KEY_2 and self.player.state != "sp_atk":
-                CHARACTER_SELECTION = 1
-                self.player.character_selection = 1
-                self.player.load_character_textures()
-                arcade.play_sound(self.sword_attack)
-            elif symbol == arcade.key.KEY_3 and self.player.state != "sp_atk":
-                CHARACTER_SELECTION = 2
-                self.player.character_selection = 2
-                self.player.load_character_textures()
-                arcade.play_sound(self.sword_attack)
-            elif symbol == arcade.key.KEY_4 and self.player.state != "sp_atk":
-                CHARACTER_SELECTION = 3
-                self.player.character_selection = 3
-                self.player.load_character_textures()
-                arcade.play_sound(self.sword_attack)
+            if symbol in [arcade.key.KEY_1, arcade.key.KEY_2, arcade.key.KEY_3, arcade.key.KEY_4]:
+                self.change_character(symbol)
+            else:
+                handle_key_press.get(symbol)()
                     
-            # ATTACKS
-            elif symbol == arcade.key.E:
-                self.player.state = "atk_1"
-                arcade.play_sound(self.sword_sound)
-                self.player.animation_start = time.time_ns()
-            elif symbol == arcade.key.R:
-                if abs(self.player.change_y) <= 0.5: 
-                    self.player.state = "sp_atk"
-                    arcade.play_sound(self.sword_attack)
-                    self.player.animation_start = time.time_ns()
-        
+
         else:
             if symbol == arcade.key.F:
                 self.player.state = 'idle'
                 self.player.curr_health = self.player.max_health
                 self.player.center_x = -800
                 self.player.center_y = -800
-        
-        # QUIT
-        if symbol == arcade.key.ESCAPE:
-            self.send_to_server("DISCONNECT")
-            arcade.exit()
+
             
     def on_key_release(self, symbol: int, modifiers: int):
         
