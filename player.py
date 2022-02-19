@@ -124,6 +124,14 @@ class Player(arcade.Sprite):
             self.change_y = PLAYER_JUMP_SPEED
             arcade.play_sound(self.male_jump)
 
+    def reset_after_death(self):
+        if self.state == 'death':
+            self.state = 'idle'
+            self.curr_health = self.max_health
+            self.center_x = -800
+            self.center_y = -800
+
+
     def load_character_textures(self):
 
         if self.character_selection == 0:

@@ -131,12 +131,6 @@ class Game(arcade.Window):
             self.player.load_character_textures()
             arcade.play_sound(self.sword_attack)
 
-    def reset_after_death(self):
-        if self.player.state == 'death':
-            self.player.state = 'idle'
-            self.player.curr_health = self.player.max_health
-            self.player.center_x = -800
-            self.player.center_y = -800
 
     def on_key_press(self, symbol: int, modifiers: int):
         
@@ -151,7 +145,7 @@ class Game(arcade.Window):
             arcade.key.W: self.make_player_jump,
             arcade.key.SPACE: self.make_player_jump,
             arcade.key.ESCAPE: self.quit_game,
-            arcade.key.F: self.reset_after_death,
+            arcade.key.F: self.player.reset_after_death,
 
         }
 
