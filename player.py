@@ -15,6 +15,9 @@ class Player(arcade.Sprite):
         self.center_y = -800
         self.character_selection = character_selection
         self.character_type = "fire"
+        self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
+        self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
+        self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
         
         self.sprite_info = {
             "water": {
@@ -95,6 +98,12 @@ class Player(arcade.Sprite):
         self.load_character_textures()
 
         self.texture = self.animation_cells['idle'][0][self.direction]
+
+    def atk_1(self):
+        if self.state != 'death':
+            self.state = "atk_1"
+            arcade.play_sound(self.sword_sound)
+            self.animation_start = time.time_ns()
 
     def load_character_textures(self):
 

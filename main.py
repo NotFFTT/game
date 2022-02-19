@@ -116,10 +116,11 @@ class Game(arcade.Window):
         self.physics_engine.enable_multi_jump(max_jumps)
 
     def atk_1(self):
-        if self.player.state != 'death':
-            self.player.state = "atk_1"
-            arcade.play_sound(self.sword_sound)
-            self.player.animation_start = time.time_ns()
+        self.player.atk_1()
+        # if self.player.state != 'death':
+        #     self.player.state = "atk_1"
+        #     arcade.play_sound(self.sword_sound)
+        #     self.player.animation_start = time.time_ns()
 
     def sp_atk(self):
         if abs(self.player.change_y) <= 0.5 and self.player.state != 'death': 
