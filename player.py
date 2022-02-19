@@ -115,6 +115,10 @@ class Player(arcade.Sprite):
         if self.state != "sp_atk" and self.state != 'death':
             self.change_x = PLAYER_MOVEMENT_SPEED
 
+    def move_left(self):
+        if self.state != "sp_atk" and self.state != 'death':
+            self.change_x = -1 * PLAYER_MOVEMENT_SPEED
+
     def load_character_textures(self):
 
         if self.character_selection == 0:
