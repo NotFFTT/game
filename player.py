@@ -1,6 +1,6 @@
 import arcade
 import time
-from constants import PLAYER_MOVEMENT_SPEED
+from constants import PLAYER_MOVEMENT_SPEED, PLAYER_JUMP_SPEED
 class Player(arcade.Sprite):
     def __init__(self, player_number=0, max_health=100, character_selection=0):
         super().__init__()
@@ -118,6 +118,11 @@ class Player(arcade.Sprite):
     def move_left(self):
         if self.state != "sp_atk" and self.state != 'death':
             self.change_x = -1 * PLAYER_MOVEMENT_SPEED
+
+    def jump(self):
+        if self.state != "sp_atk" and self.state != 'death':
+            self.change_y = PLAYER_JUMP_SPEED
+            arcade.play_sound(self.male_jump)
 
     def load_character_textures(self):
 

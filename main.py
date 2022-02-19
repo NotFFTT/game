@@ -115,18 +115,9 @@ class Game(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = gravity_const, walls = walls)
         self.physics_engine.enable_multi_jump(max_jumps)
 
-    # def move_right(self):
-    #     if self.player.state != "sp_atk" and self.player.state != 'death':
-    #         self.player.change_x = PLAYER_MOVEMENT_SPEED
-
-    def move_left(self):
-        if self.player.state != "sp_atk" and self.player.state != 'death':
-            self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
-
-    def jump(self):
-        if self.physics_engine.can_jump() and self.player.state != "sp_atk" and self.player.state != 'death':
-            self.player.change_y = PLAYER_JUMP_SPEED
-            arcade.play_sound(self.male_jump)
+    def make_player_jump(self):
+        if self.physics_engine.can_jump():
+            self.player.jump()
             self.physics_engine.increment_jump_counter()
 
     def quit_game(self):
@@ -156,9 +147,9 @@ class Game(arcade.Window):
             arcade.key.D: self.player.move_right,
             arcade.key.LEFT: self.player.move_left,
             arcade.key.A: self.player.move_left,
-            arcade.key.UP: self.jump,
-            arcade.key.W: self.jump,
-            arcade.key.SPACE: self.jump,
+            arcade.key.UP: self.make_player_jump,
+            arcade.key.W: self.make_player_jump,
+            arcade.key.SPACE: self.make_player_jump,
             arcade.key.ESCAPE: self.quit_game,
             arcade.key.F: self.reset_after_death,
 
