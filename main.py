@@ -115,13 +115,6 @@ class Game(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = gravity_const, walls = walls)
         self.physics_engine.enable_multi_jump(max_jumps)
 
-    def atk_1(self):
-        self.player.atk_1()
-        # if self.player.state != 'death':
-        #     self.player.state = "atk_1"
-        #     arcade.play_sound(self.sword_sound)
-        #     self.player.animation_start = time.time_ns()
-
     def sp_atk(self):
         if abs(self.player.change_y) <= 0.5 and self.player.state != 'death': 
             self.player.state = "sp_atk"
@@ -163,7 +156,7 @@ class Game(arcade.Window):
     def on_key_press(self, symbol: int, modifiers: int):
         
         handle_key_press = {
-            arcade.key.E: self.atk_1, 
+            arcade.key.E: self.player.atk_1, 
             arcade.key.R: self.sp_atk,
             arcade.key.RIGHT: self.move_right,
             arcade.key.D: self.move_right,
