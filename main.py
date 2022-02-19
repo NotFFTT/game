@@ -115,15 +115,9 @@ class Game(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = gravity_const, walls = walls)
         self.physics_engine.enable_multi_jump(max_jumps)
 
-    def sp_atk(self):
-        if abs(self.player.change_y) <= 0.5 and self.player.state != 'death': 
-            self.player.state = "sp_atk"
-            arcade.play_sound(self.sword_attack)
-            self.player.animation_start = time.time_ns()
-
-    def move_right(self):
-        if self.player.state != "sp_atk" and self.player.state != 'death':
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
+    # def move_right(self):
+    #     if self.player.state != "sp_atk" and self.player.state != 'death':
+    #         self.player.change_x = PLAYER_MOVEMENT_SPEED
 
     def move_left(self):
         if self.player.state != "sp_atk" and self.player.state != 'death':
@@ -157,9 +151,9 @@ class Game(arcade.Window):
         
         handle_key_press = {
             arcade.key.E: self.player.atk_1, 
-            arcade.key.R: self.sp_atk,
-            arcade.key.RIGHT: self.move_right,
-            arcade.key.D: self.move_right,
+            arcade.key.R: self.player.sp_atk,
+            arcade.key.RIGHT: self.player.move_right,
+            arcade.key.D: self.player.move_right,
             arcade.key.LEFT: self.move_left,
             arcade.key.A: self.move_left,
             arcade.key.UP: self.jump,
