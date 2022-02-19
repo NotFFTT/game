@@ -1,6 +1,6 @@
 import arcade
 import time
-
+from constants import PLAYER_MOVEMENT_SPEED, PLAYER_JUMP_SPEED
 class Player(arcade.Sprite):
     def __init__(self, player_number=0, max_health=100, character_selection=0):
         super().__init__()
@@ -15,6 +15,9 @@ class Player(arcade.Sprite):
         self.center_y = -800
         self.character_selection = character_selection
         self.character_type = "fire"
+        self.sword_sound = arcade.load_sound("assets/sounds/sword_slash.wav")
+        self.male_jump = arcade.load_sound("assets/sounds/Male_jump.wav")
+        self.sword_attack = arcade.load_sound("assets/sounds/sword_swoosh.wav")
         
         self.sprite_info = {
             "water": {
@@ -95,6 +98,39 @@ class Player(arcade.Sprite):
         self.load_character_textures()
 
         self.texture = self.animation_cells['idle'][0][self.direction]
+
+    def atk_1(self):
+        if self.state != 'death':
+            self.state = "atk_1"
+            arcade.play_sound(self.sword_sound)
+            self.animation_start = time.time_ns()
+
+    def sp_atk(self):
+        if abs(self.change_y) <= 0.5 and self.state != 'death': 
+            self.state = "sp_atk"
+            arcade.play_sound(self.sword_attack)
+            self.animation_start = time.time_ns()
+    
+    def move_right(self):
+        if self.state != "sp_atk" and self.state != 'death':
+            self.change_x = PLAYER_MOVEMENT_SPEED
+
+    def move_left(self):
+        if self.state != "sp_atk" and self.state != 'death':
+            self.change_x = -1 * PLAYER_MOVEMENT_SPEED
+
+    def jump(self):
+        if self.state != "sp_atk" and self.state != 'death':
+            self.change_y = PLAYER_JUMP_SPEED
+            arcade.play_sound(self.male_jump)
+
+    def reset_after_death(self):
+        if self.state == 'death':
+            self.state = 'idle'
+            self.curr_health = self.max_health
+            self.center_x = -800
+            self.center_y = -800
+
 
     def load_character_textures(self):
 

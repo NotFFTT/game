@@ -115,30 +115,9 @@ class Game(arcade.Window):
         self.physics_engine = arcade.PhysicsEnginePlatformer(self.player, gravity_constant = gravity_const, walls = walls)
         self.physics_engine.enable_multi_jump(max_jumps)
 
-    def atk_1(self):
-        if self.player.state != 'death':
-            self.player.state = "atk_1"
-            arcade.play_sound(self.sword_sound)
-            self.player.animation_start = time.time_ns()
-
-    def sp_atk(self):
-        if abs(self.player.change_y) <= 0.5 and self.player.state != 'death': 
-            self.player.state = "sp_atk"
-            arcade.play_sound(self.sword_attack)
-            self.player.animation_start = time.time_ns()
-
-    def move_right(self):
-        if self.player.state != "sp_atk" and self.player.state != 'death':
-            self.player.change_x = PLAYER_MOVEMENT_SPEED
-
-    def move_left(self):
-        if self.player.state != "sp_atk" and self.player.state != 'death':
-            self.player.change_x = -1 * PLAYER_MOVEMENT_SPEED
-
-    def jump(self):
-        if self.physics_engine.can_jump() and self.player.state != "sp_atk" and self.player.state != 'death':
-            self.player.change_y = PLAYER_JUMP_SPEED
-            arcade.play_sound(self.male_jump)
+    def make_player_jump(self):
+        if self.physics_engine.can_jump():
+            self.player.jump()
             self.physics_engine.increment_jump_counter()
 
     def quit_game(self):
@@ -152,27 +131,21 @@ class Game(arcade.Window):
             self.player.load_character_textures()
             arcade.play_sound(self.sword_attack)
 
-    def reset_after_death(self):
-        if self.player.state == 'death':
-            self.player.state = 'idle'
-            self.player.curr_health = self.player.max_health
-            self.player.center_x = -800
-            self.player.center_y = -800
 
     def on_key_press(self, symbol: int, modifiers: int):
         
         handle_key_press = {
-            arcade.key.E: self.atk_1, 
-            arcade.key.R: self.sp_atk,
-            arcade.key.RIGHT: self.move_right,
-            arcade.key.D: self.move_right,
-            arcade.key.LEFT: self.move_left,
-            arcade.key.A: self.move_left,
-            arcade.key.UP: self.jump,
-            arcade.key.W: self.jump,
-            arcade.key.SPACE: self.jump,
+            arcade.key.E: self.player.atk_1, 
+            arcade.key.R: self.player.sp_atk,
+            arcade.key.RIGHT: self.player.move_right,
+            arcade.key.D: self.player.move_right,
+            arcade.key.LEFT: self.player.move_left,
+            arcade.key.A: self.player.move_left,
+            arcade.key.UP: self.make_player_jump,
+            arcade.key.W: self.make_player_jump,
+            arcade.key.SPACE: self.make_player_jump,
             arcade.key.ESCAPE: self.quit_game,
-            arcade.key.F: self.reset_after_death,
+            arcade.key.F: self.player.reset_after_death,
 
         }
 
