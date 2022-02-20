@@ -98,14 +98,14 @@ class Player(arcade.Sprite):
         self.load_character_textures()
 
         self.texture = self.animation_cells['idle'][0][self.direction]
-        
-    def draw_label(self):
+
+    def draw_label(self, bg_color):
         arcade.draw_rectangle_filled(
             self.center_x,
             self.center_y + self.height/3,
             width=115,
             height=25,
-            color=(253, 238, 0, 200),
+            color=bg_color,
         )
 
         arcade.draw_text(

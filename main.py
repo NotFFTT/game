@@ -184,7 +184,7 @@ class Game(arcade.Window):
         self.draw_player_labels()
         
     def draw_player_labels(self):
-        self.player.draw_label()
+        self.player.draw_label((253, 238, 0, 200))
         # arcade.draw_rectangle_filled(
         #     self.player.center_x,
         #     self.player.center_y + self.player.height/3,
@@ -206,8 +206,8 @@ class Game(arcade.Window):
         # )
 
         for player in self.players_list:
-            if player.player_number != self.player.player_number:
-                player.draw_label()
+            # if player.player_number != self.player.player_number:
+            player.draw_label((255, 255, 255, 100))
                 # arcade.draw_rectangle_filled(
                 #     player.center_x,
                 #     player.center_y + player.height/3,
