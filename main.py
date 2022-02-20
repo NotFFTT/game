@@ -185,18 +185,17 @@ class Game(arcade.Window):
         self.draw_healthbars()
 
     def draw_healthbars(self):
-        self.max_health = 100
+
         for index, player in enumerate(self.players_list):
             
-            health_width = HEALTHBAR_WIDTH * (player.curr_health / self.max_health)
-            x = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
-            r = 255 * (self.max_health - player.curr_health) / self.max_health
-            g = 255 * 2 * player.curr_health / self.max_health if player.curr_health < self.max_health/2 else 255
+            position = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
+            r = 255 * (player.max_health - player.curr_health) / player.max_health
+            g = 255 * 2 * player.curr_health / player.max_health if player.curr_health < player.max_health/2 else 255
             b = 20
             
             if player.player_number == self.player.player_number:
 
-                arcade.draw_rectangle_filled(center_x = x,
+                arcade.draw_rectangle_filled(center_x = position,
                                 center_y=20+40 + HEALTHBAR_OFFSET_Y,
                                 width=HEALTHBAR_WIDTH,
                                 height=HEALTHBAR_HEIGHT,
@@ -204,7 +203,7 @@ class Game(arcade.Window):
                 )
 
                 arcade.draw_text(f"PLAYER {index + 1}",
-                                start_x = x + HEALTH_NUMBER_OFFSET_X,
+                                start_x = position + HEALTH_NUMBER_OFFSET_X,
                                 start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
                                 font_size=14,
                                 color=arcade.color.WHITE
@@ -212,7 +211,7 @@ class Game(arcade.Window):
             
             else:
 
-                arcade.draw_rectangle_filled(center_x = x,
+                arcade.draw_rectangle_filled(center_x = position,
                                 center_y=20+40 + HEALTHBAR_OFFSET_Y,
                                 width=HEALTHBAR_WIDTH,
                                 height=HEALTHBAR_HEIGHT,
@@ -220,7 +219,7 @@ class Game(arcade.Window):
                 )
 
                 arcade.draw_text(f"PLAYER {index + 1}",
-                                start_x = x + HEALTH_NUMBER_OFFSET_X,
+                                start_x = position + HEALTH_NUMBER_OFFSET_X,
                                 start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
                                 font_size=14,
                                 color=arcade.color.WHITE if abs(player.center_x + 800) > 10 else (200, 200, 200, 155)

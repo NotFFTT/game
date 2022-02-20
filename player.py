@@ -119,7 +119,7 @@ class Player(arcade.Sprite):
             width=115,
             font_name="Kenney Future",
         )
-
+    
     def atk_1(self):
         if self.state != 'death':
             self.state = "atk_1"
