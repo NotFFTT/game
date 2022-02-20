@@ -184,47 +184,48 @@ class Game(arcade.Window):
         self.draw_player_labels()
         
     def draw_player_labels(self):
+        self.player.draw_label()
+        # arcade.draw_rectangle_filled(
+        #     self.player.center_x,
+        #     self.player.center_y + self.player.height/3,
+        #     width=115,
+        #     height=25,
+        #     color=(253, 238, 0, 200),
+        # )
 
-        arcade.draw_rectangle_filled(
-            self.player.center_x,
-            self.player.center_y + self.player.height/3,
-            width=115,
-            height=25,
-            color=(253, 238, 0, 200),
-        )
-
-        arcade.draw_text(
-            "Player " + str(self.player.player_number + 1),
-            self.player.center_x - 115/2,
-            self.player.center_y + self.player.height/3 - 5,
-            arcade.color.BLACK,
-            font_size = 12,
-            bold=True,
-            align = "center",
-            width=115,
-            font_name="Kenney Future",
-        )
+        # arcade.draw_text(
+        #     "Player " + str(self.player.player_number + 1),
+        #     self.player.center_x - 115/2,
+        #     self.player.center_y + self.player.height/3 - 5,
+        #     arcade.color.BLACK,
+        #     font_size = 12,
+        #     bold=True,
+        #     align = "center",
+        #     width=115,
+        #     font_name="Kenney Future",
+        # )
 
         for player in self.players_list:
             if player.player_number != self.player.player_number:
-                arcade.draw_rectangle_filled(
-                    player.center_x,
-                    player.center_y + player.height/3,
-                    width=115,
-                    height=25,
-                    color=(255, 255, 255, 100),
-                )
-                arcade.draw_text(
-                    "Player " + str(player.player_number + 1),
-                    player.center_x - 115/2,
-                    player.center_y + player.height/3 - 5,
-                    arcade.color.BLACK,
-                    font_size = 12,
-                    bold=True,
-                    align = "center",
-                    width=115,
-                    font_name="Kenney Future",
-                )
+                player.draw_label()
+                # arcade.draw_rectangle_filled(
+                #     player.center_x,
+                #     player.center_y + player.height/3,
+                #     width=115,
+                #     height=25,
+                #     color=(255, 255, 255, 100),
+                # )
+                # arcade.draw_text(
+                #     "Player " + str(player.player_number + 1),
+                #     player.center_x - 115/2,
+                #     player.center_y + player.height/3 - 5,
+                #     arcade.color.BLACK,
+                #     font_size = 12,
+                #     bold=True,
+                #     align = "center",
+                #     width=115,
+                #     font_name="Kenney Future",
+                # )
 
     def draw_healthbars(self):
         self.max_health = 100
