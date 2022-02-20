@@ -188,6 +188,21 @@ class Game(arcade.Window):
     def player_is_connected(player):
         return player.center_y > -800
 
+    @staticmethod
+    def draw_health_bar(player_number, position, bar_color):
+        arcade.draw_rectangle_filled(center_x = position,
+                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
+                                width=HEALTHBAR_WIDTH,
+                                height=HEALTHBAR_HEIGHT,
+                                color=bar_color
+                )
+
+        arcade.draw_text(f"PLAYER {player_number + 1}",
+                                start_x = position + HEALTH_NUMBER_OFFSET_X,
+                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
+                                font_size=14,
+                                color=arcade.color.WHITE
+                )
     def draw_healthbars(self):
 
         for index, player in enumerate(self.players_list):
@@ -198,20 +213,21 @@ class Game(arcade.Window):
             b = 20
             
             if player.player_number == self.player.player_number:
+                self.draw_health_bar(index, position=position, bar_color=(r, g, b))
 
-                arcade.draw_rectangle_filled(center_x = position,
-                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
-                                width=HEALTHBAR_WIDTH,
-                                height=HEALTHBAR_HEIGHT,
-                                color=(r, g, b)
-                )
+                # arcade.draw_rectangle_filled(center_x = position,
+                #                 center_y=20+40 + HEALTHBAR_OFFSET_Y,
+                #                 width=HEALTHBAR_WIDTH,
+                #                 height=HEALTHBAR_HEIGHT,
+                #                 color=(r, g, b)
+                # )
 
-                arcade.draw_text(f"PLAYER {index + 1}",
-                                start_x = position + HEALTH_NUMBER_OFFSET_X,
-                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
-                                font_size=14,
-                                color=arcade.color.WHITE
-                )
+                # arcade.draw_text(f"PLAYER {index + 1}",
+                #                 start_x = position + HEALTH_NUMBER_OFFSET_X,
+                #                 start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
+                #                 font_size=14,
+                #                 color=arcade.color.WHITE
+                # )
             
             else:
 
