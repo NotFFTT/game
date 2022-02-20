@@ -183,6 +183,10 @@ class Game(arcade.Window):
         
         # Draw UI
         self.draw_healthbars()
+    
+    @staticmethod
+    def player_is_connected(player):
+        return player.center_y > -800
 
     def draw_healthbars(self):
 
