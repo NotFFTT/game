@@ -176,97 +176,49 @@ class Game(arcade.Window):
 
         # Draw other players
         for player in self.players_list:
+            player.draw_label((255, 255, 255, 100))
             player.draw()
         self.player.draw()
+        self.player.draw_label((253, 238, 0, 200))
         
         # Draw UI
         self.draw_healthbars()
-        self.draw_player_labels()
-        
-    def draw_player_labels(self):
+    
+    @staticmethod
+    def player_is_connected(player):
+        return player.center_y > -800
 
-        arcade.draw_rectangle_filled(
-            self.player.center_x,
-            self.player.center_y + self.player.height/3,
-            width=115,
-            height=25,
-            color=(253, 238, 0, 200),
-        )
-
-        arcade.draw_text(
-            "Player " + str(self.player.player_number + 1),
-            self.player.center_x - 115/2,
-            self.player.center_y + self.player.height/3 - 5,
-            arcade.color.BLACK,
-            font_size = 12,
-            bold=True,
-            align = "center",
-            width=115,
-            font_name="Kenney Future",
-        )
-
-        for player in self.players_list:
-            if player.player_number != self.player.player_number:
-                arcade.draw_rectangle_filled(
-                    player.center_x,
-                    player.center_y + player.height/3,
-                    width=115,
-                    height=25,
-                    color=(255, 255, 255, 100),
-                )
-                arcade.draw_text(
-                    "Player " + str(player.player_number + 1),
-                    player.center_x - 115/2,
-                    player.center_y + player.height/3 - 5,
-                    arcade.color.BLACK,
-                    font_size = 12,
-                    bold=True,
-                    align = "center",
-                    width=115,
-                    font_name="Kenney Future",
-                )
-
-    def draw_healthbars(self):
-        self.max_health = 100
-        for index, player in enumerate(self.players_list):
-            
-            health_width = HEALTHBAR_WIDTH * (player.curr_health / self.max_health)
-            x = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
-            r = 255 * (self.max_health - player.curr_health) / self.max_health
-            g = 255 * 2 * player.curr_health / self.max_health if player.curr_health < self.max_health/2 else 255
-            b = 20
-            
-            if player.player_number == self.player.player_number:
-
-                arcade.draw_rectangle_filled(center_x = x,
+    @staticmethod
+    def draw_health_bar(player_number, position, bar_color):
+        arcade.draw_rectangle_filled(center_x = position,
                                 center_y=20+40 + HEALTHBAR_OFFSET_Y,
                                 width=HEALTHBAR_WIDTH,
                                 height=HEALTHBAR_HEIGHT,
-                                color=(r, g, b)
+                                color=bar_color
                 )
 
-                arcade.draw_text(f"PLAYER {index + 1}",
-                                start_x = x + HEALTH_NUMBER_OFFSET_X,
+        arcade.draw_text(f"PLAYER {player_number + 1}",
+                                start_x = position + HEALTH_NUMBER_OFFSET_X,
                                 start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
                                 font_size=14,
                                 color=arcade.color.WHITE
                 )
+
+    def draw_healthbars(self):
+
+        for index, player in enumerate(self.players_list):
             
+            position = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
+            r = 255 * (player.max_health - player.curr_health) / player.max_health
+            g = 255 * 2 * player.curr_health / player.max_health if player.curr_health < player.max_health/2 else 255
+            b = 20
+            
+            if player.player_number == self.player.player_number:
+                self.draw_health_bar(index, position=position, bar_color=(r, g, b))
+            elif self.player_is_connected(player):
+                self.draw_health_bar(index, position=position, bar_color=(r, g, b))
             else:
-
-                arcade.draw_rectangle_filled(center_x = x,
-                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
-                                width=HEALTHBAR_WIDTH,
-                                height=HEALTHBAR_HEIGHT,
-                                color=(r, g, b) if abs(player.center_x + 800) > 10 else (200, 200, 200, 155)
-                )
-
-                arcade.draw_text(f"PLAYER {index + 1}",
-                                start_x = x + HEALTH_NUMBER_OFFSET_X,
-                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
-                                font_size=14,
-                                color=arcade.color.WHITE if abs(player.center_x + 800) > 10 else (200, 200, 200, 155)
-                )
+                self.draw_health_bar(index, position=position, bar_color=(200, 200, 200, 155))
 
         
     def send_to_server(self, msg):

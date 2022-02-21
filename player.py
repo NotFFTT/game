@@ -99,6 +99,27 @@ class Player(arcade.Sprite):
 
         self.texture = self.animation_cells['idle'][0][self.direction]
 
+    def draw_label(self, bg_color):
+        arcade.draw_rectangle_filled(
+            self.center_x,
+            self.center_y + self.height/3,
+            width=115,
+            height=25,
+            color=bg_color,
+        )
+
+        arcade.draw_text(
+            "Player " + str(self.player_number + 1),
+            self.center_x - 115/2,
+            self.center_y + self.height/3 - 5,
+            arcade.color.BLACK,
+            font_size = 12,
+            bold=True,
+            align = "center",
+            width=115,
+            font_name="Kenney Future",
+        )
+    
     def atk_1(self):
         if self.state != 'death':
             self.state = "atk_1"
