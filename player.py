@@ -1,6 +1,15 @@
 import arcade
 import time
-from constants import PLAYER_MOVEMENT_SPEED, PLAYER_JUMP_SPEED
+from constants import (
+    PLAYER_MOVEMENT_SPEED, 
+    PLAYER_JUMP_SPEED, 
+    SCREEN_WIDTH, 
+    HEALTH_NUMBER_OFFSET_X, 
+    HEALTH_NUMBER_OFFSET_Y, 
+    HEALTHBAR_HEIGHT, 
+    HEALTHBAR_OFFSET_Y, 
+    HEALTHBAR_WIDTH,
+    )
 class Player(arcade.Sprite):
     def __init__(self, player_number=0, max_health=100, character_selection=0):
         super().__init__()
@@ -119,7 +128,46 @@ class Player(arcade.Sprite):
             width=115,
             font_name="Kenney Future",
         )
-    
+
+    def draw_health_bar(self):
+
+        position = (self.player_number * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
+        r = 255 * (self.max_health - self.curr_health) / self.max_health
+        g = 255 * 2 * self.curr_health / self.max_health if self.curr_health < self.max_health/2 else 255
+        b = 20
+
+        arcade.draw_rectangle_filled(center_x = position,
+                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
+                                width=HEALTHBAR_WIDTH,
+                                height=HEALTHBAR_HEIGHT,
+                                color=(r, g, b)
+                )
+
+        arcade.draw_text(f"PLAYER {self.player_number + 1}",
+                                start_x = position + HEALTH_NUMBER_OFFSET_X,
+                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
+                                font_size=14,
+                                color=arcade.color.WHITE
+                )
+
+    def draw_disconnected(self):
+
+        position = (self.player_number * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
+
+        arcade.draw_rectangle_filled(center_x = position,
+                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
+                                width=HEALTHBAR_WIDTH,
+                                height=HEALTHBAR_HEIGHT,
+                                color=(200, 200, 200, 155)
+                )
+
+        arcade.draw_text(f"PLAYER {self.player_number + 1}",
+                                start_x = position + HEALTH_NUMBER_OFFSET_X,
+                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
+                                font_size=14,
+                                color=arcade.color.WHITE
+                )
+
     def atk_1(self):
         if self.state != 'death':
             self.state = "atk_1"

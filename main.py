@@ -188,39 +188,16 @@ class Game(arcade.Window):
     def player_is_connected(player):
         return player.center_y > -800
 
-    @staticmethod
-    def draw_health_bar(player_number, position, bar_color):
-        arcade.draw_rectangle_filled(center_x = position,
-                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
-                                width=HEALTHBAR_WIDTH,
-                                height=HEALTHBAR_HEIGHT,
-                                color=bar_color
-                )
-
-        arcade.draw_text(f"PLAYER {player_number + 1}",
-                                start_x = position + HEALTH_NUMBER_OFFSET_X,
-                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
-                                font_size=14,
-                                color=arcade.color.WHITE
-                )
-
     def draw_healthbars(self):
 
-        for index, player in enumerate(self.players_list):
-            
-            position = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
-            r = 255 * (player.max_health - player.curr_health) / player.max_health
-            g = 255 * 2 * player.curr_health / player.max_health if player.curr_health < player.max_health/2 else 255
-            b = 20
-            
+        for player in self.players_list:
             if player.player_number == self.player.player_number:
-                self.draw_health_bar(index, position=position, bar_color=(r, g, b))
+                self.player.draw_health_bar()
             elif self.player_is_connected(player):
-                self.draw_health_bar(index, position=position, bar_color=(r, g, b))
+                player.draw_health_bar()
             else:
-                self.draw_health_bar(index, position=position, bar_color=(200, 200, 200, 155))
+                player.draw_disconnected()
 
-        
     def send_to_server(self, msg):
         try:
             message = pickle.dumps(msg)
