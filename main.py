@@ -233,24 +233,27 @@ class Game(arcade.Window):
                 if player.character_selection != server_character_selection:
                     player.character_selection = server_character_selection
                     player.load_character_textures()
+                prev_state = player.state
+                player.state = server_state
 
                 if index == self.player.player_number:
-                    pass
                     # if self.player.center_y < -1000:
                     #     self.player.center_x = 100
                     #     self.player.center_y = 160
                     #     player.curr_health = player.max_health
-                else:
-                    prev_state = player.state
-                    player.state = server_state
-                    if index == self.player.player_number and player.curr_health == player.max_health:
+                    if player.curr_health == player.max_health:
                         self.player.curr_health = self.player.max_health
-                    elif prev_state == 'death' and player.state == 'idle':
+
+                    if prev_state == 'death' and player.state == 'idle':
                         player.curr_health = player.max_health
-                        if index == self.player.player_number:
-                            self.player.curr_health = self.player.max_health
-                    elif prev_state != player.state and (server_state == 'atk_1' or server_state == 'sp_atk' or server_state == 'death'):
+                        self.player.curr_health = self.player.max_health
+                else:
+                    if prev_state == 'death' and player.state == 'idle':
+                        player.curr_health = player.max_health
+
+                    elif prev_state != player.state and server_state in ('atk_1', 'sp_atk','death'):
                         player.animation_start = time.time_ns()
+
                     elif player.state == "death":
                         player.curr_health = 0
 
