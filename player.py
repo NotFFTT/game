@@ -276,6 +276,12 @@ class Player(arcade.Sprite):
                 self.state = 'run'
         elif self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death':
                 self.state = 'idle'
+
+        if self.center_y < -1000:
+            self.center_x = 100
+            self.center_y = 160
+            self.curr_health = self.max_health
+            #  TODO: Kill player?
         
     def update_animation(self, delta_time):
 

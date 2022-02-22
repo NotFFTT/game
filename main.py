@@ -235,10 +235,11 @@ class Game(arcade.Window):
                     player.load_character_textures()
 
                 if index == self.player.player_number:
-                    if self.player.center_y < -1000:
-                        self.player.center_x = 100
-                        self.player.center_y = 160
-                        player.curr_health = player.max_health
+                    pass
+                    # if self.player.center_y < -1000:
+                    #     self.player.center_x = 100
+                    #     self.player.center_y = 160
+                    #     player.curr_health = player.max_health
                 else:
                     prev_state = player.state
                     player.state = server_state
