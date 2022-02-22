@@ -222,48 +222,24 @@ class Game(arcade.Window):
 
         try:
             for index, player in enumerate(self.players_list):
-                server_center_x = float(received_list[index]["x"])
-                server_center_y = float(received_list[index]["y"])
-                server_change_x = float(received_list[index]["vx"])
-                server_change_y = float(received_list[index]["vy"])
-                server_state = str(received_list[index]["st"])
-                server_character_selection = int(received_list[index]["c"])
+
+                server_data = {
+                'server_center_x': float(received_list[index]["x"]),
+                'server_center_y': float(received_list[index]["y"]),
+                'server_change_x': float(received_list[index]["vx"]),
+                'server_change_y': float(received_list[index]["vy"]),
+                'server_state': str(received_list[index]["st"]),
+                'server_character_selection': int(received_list[index]["c"]),
+                'prev_state': player.state,
+                'player_number': index,
+                }
+
 
                 player.player_number = index
-                if player.character_selection != server_character_selection:
-                    player.character_selection = server_character_selection
-                    player.load_character_textures()
-                prev_state = player.state
-                player.state = server_state
-
                 if index == self.player.player_number:
-                    # if self.player.center_y < -1000:
-                    #     self.player.center_x = 100
-                    #     self.player.center_y = 160
-                    #     player.curr_health = player.max_health
-                    if player.curr_health == player.max_health:
-                        self.player.curr_health = self.player.max_health
-
-                    if prev_state == 'death' and player.state == 'idle':
-                        player.curr_health = player.max_health
-                        self.player.curr_health = self.player.max_health
+                    self.player.local_update_with_server_data(server_data)
                 else:
-                    if prev_state == 'death' and player.state == 'idle':
-                        player.curr_health = player.max_health
-
-                    elif prev_state != player.state and server_state in ('atk_1', 'sp_atk','death'):
-                        player.animation_start = time.time_ns()
-
-                    elif player.state == "death":
-                        player.curr_health = 0
-
-                    player.center_x = server_center_x
-                    player.center_y = server_center_y
-
-                    player.change_x = server_change_x
-                    player.change_y = server_change_y
-
-                    player.set_hit_box(player.texture.hit_box_points)
+                    player.update_with_server_data(server_data)
                 
                 # Update damage to all players including client based on damage in recieved_data from server.
                 for key, value in received_list.items():

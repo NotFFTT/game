@@ -107,6 +107,31 @@ class Player(arcade.Sprite):
         self.load_character_textures()
 
         self.texture = self.animation_cells['idle'][0][self.direction]
+    def local_update_with_server_data(self, server_data):
+        pass
+
+    def update_with_server_data(self, server_data):
+        # self.player_number = server_data['player_number']
+        if self.character_selection != server_data['server_character_selection']:
+            self.character_selection = server_data['server_character_selection']
+            self.load_character_textures()
+
+        self.state = server_data['server_state']
+        if server_data['prev_state'] == 'death' and self.state == 'idle':
+            self.curr_health = self.max_health
+
+        if server_data['prev_state'] != self.state and self.state in ('atk_1', 'sp_atk','death'):
+            self.animation_start = time.time_ns()
+
+        if self.state == "death":
+            self.curr_health = 0
+
+        self.center_x = server_data['server_center_x']
+        self.center_y = server_data['server_center_y']
+        self.change_x = server_data['server_change_x']
+        self.change_y = server_data['server_change_y']
+
+        self.set_hit_box(self.texture.hit_box_points)
 
     def draw_label(self, bg_color):
         arcade.draw_rectangle_filled(
