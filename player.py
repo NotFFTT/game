@@ -107,6 +107,8 @@ class Player(arcade.Sprite):
         self.load_character_textures()
 
         self.texture = self.animation_cells['idle'][0][self.direction]
+
+
     def local_update_with_server_data(self, server_data):
         pass
 
@@ -217,6 +219,7 @@ class Player(arcade.Sprite):
         if self.state != "sp_atk" and self.state != 'death':
             self.change_y = PLAYER_JUMP_SPEED
             arcade.play_sound(self.male_jump)
+            self.state = 'jump'
 
     def reset_after_death(self):
         if self.state == 'death':
@@ -280,11 +283,18 @@ class Player(arcade.Sprite):
 
     def on_update(self, delta_time):
         self.update_animation(delta_time)
+
+        # kill player
         if self.curr_health <= 0 and self.state != 'death':
                 self.state = 'death'
                 self.animation_start = time.time_ns()
+
+        # change state to jump
         elif abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death'):
             self.state = 'jump'
+
+
+        # change state to run
         elif self.change_x > 0:
             if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
                 self.direction = 0
@@ -299,9 +309,14 @@ class Player(arcade.Sprite):
                     self.texture = self.animation_cells['run'][0][self.direction]
                     self.set_hit_box(self.texture.hit_box_points)
                 self.state = 'run'
+
+
+        # RESET state to idle
         elif self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death':
                 self.state = 'idle'
 
+
+        # Check for fall
         if self.center_y < -1000:
             self.center_x = 100
             self.center_y = 160
