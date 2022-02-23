@@ -1,6 +1,15 @@
 import arcade
 import time
-from constants import PLAYER_MOVEMENT_SPEED, PLAYER_JUMP_SPEED
+from constants import (
+    PLAYER_MOVEMENT_SPEED, 
+    PLAYER_JUMP_SPEED, 
+    SCREEN_WIDTH, 
+    HEALTH_NUMBER_OFFSET_X, 
+    HEALTH_NUMBER_OFFSET_Y, 
+    HEALTHBAR_HEIGHT, 
+    HEALTHBAR_OFFSET_Y, 
+    HEALTHBAR_WIDTH,
+    )
 class Player(arcade.Sprite):
     def __init__(self, player_number=0, max_health=100, character_selection=0):
         super().__init__()
@@ -99,6 +108,33 @@ class Player(arcade.Sprite):
 
         self.texture = self.animation_cells['idle'][0][self.direction]
 
+
+    def local_update_with_server_data(self, server_data):
+        pass
+
+    def update_with_server_data(self, server_data):
+        # self.player_number = server_data['player_number']
+        if self.character_selection != server_data['server_character_selection']:
+            self.character_selection = server_data['server_character_selection']
+            self.load_character_textures()
+
+        self.state = server_data['server_state']
+        if server_data['prev_state'] == 'death' and self.state == 'idle':
+            self.curr_health = self.max_health
+
+        if server_data['prev_state'] != self.state and self.state in ('atk_1', 'sp_atk','death'):
+            self.animation_start = time.time_ns()
+
+        if self.state == "death":
+            self.curr_health = 0
+
+        self.center_x = server_data['server_center_x']
+        self.center_y = server_data['server_center_y']
+        self.change_x = server_data['server_change_x']
+        self.change_y = server_data['server_change_y']
+
+        self.set_hit_box(self.texture.hit_box_points)
+
     def draw_label(self, bg_color):
         arcade.draw_rectangle_filled(
             self.center_x,
@@ -119,7 +155,46 @@ class Player(arcade.Sprite):
             width=115,
             font_name="Kenney Future",
         )
-    
+
+    def draw_health_bar(self):
+
+        position = (self.player_number * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
+        r = 255 * (self.max_health - self.curr_health) / self.max_health
+        g = 255 * 2 * self.curr_health / self.max_health if self.curr_health < self.max_health/2 else 255
+        b = 20
+
+        arcade.draw_rectangle_filled(center_x = position,
+                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
+                                width=HEALTHBAR_WIDTH,
+                                height=HEALTHBAR_HEIGHT,
+                                color=(r, g, b)
+                )
+
+        arcade.draw_text(f"PLAYER {self.player_number + 1}",
+                                start_x = position + HEALTH_NUMBER_OFFSET_X,
+                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
+                                font_size=14,
+                                color=arcade.color.WHITE
+                )
+
+    def draw_disconnected(self):
+
+        position = (self.player_number * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
+
+        arcade.draw_rectangle_filled(center_x = position,
+                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
+                                width=HEALTHBAR_WIDTH,
+                                height=HEALTHBAR_HEIGHT,
+                                color=(200, 200, 200, 155)
+                )
+
+        arcade.draw_text(f"PLAYER {self.player_number + 1}",
+                                start_x = position + HEALTH_NUMBER_OFFSET_X,
+                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
+                                font_size=14,
+                                color=arcade.color.WHITE
+                )
+
     def atk_1(self):
         if self.state != 'death':
             self.state = "atk_1"
@@ -144,6 +219,7 @@ class Player(arcade.Sprite):
         if self.state != "sp_atk" and self.state != 'death':
             self.change_y = PLAYER_JUMP_SPEED
             arcade.play_sound(self.male_jump)
+            self.state = 'jump'
 
     def reset_after_death(self):
         if self.state == 'death':
@@ -207,11 +283,18 @@ class Player(arcade.Sprite):
 
     def on_update(self, delta_time):
         self.update_animation(delta_time)
+
+        # kill player
         if self.curr_health <= 0 and self.state != 'death':
                 self.state = 'death'
                 self.animation_start = time.time_ns()
+
+        # change state to jump
         elif abs(self.change_y) > 0.2 and (self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death'):
             self.state = 'jump'
+
+
+        # change state to run
         elif self.change_x > 0:
             if self.state != 'atk_1' and (self.state != 'sp_atk' and self.state != 'death'):
                 self.direction = 0
@@ -226,8 +309,19 @@ class Player(arcade.Sprite):
                     self.texture = self.animation_cells['run'][0][self.direction]
                     self.set_hit_box(self.texture.hit_box_points)
                 self.state = 'run'
+
+
+        # RESET state to idle
         elif self.state != 'atk_1' and self.state != 'sp_atk' and self.state != 'death':
                 self.state = 'idle'
+
+
+        # Check for fall
+        if self.center_y < -1000:
+            self.center_x = 100
+            self.center_y = 160
+            self.curr_health = self.max_health
+            #  TODO: Kill player?
         
     def update_animation(self, delta_time):
 

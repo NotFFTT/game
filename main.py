@@ -188,39 +188,16 @@ class Game(arcade.Window):
     def player_is_connected(player):
         return player.center_y > -800
 
-    @staticmethod
-    def draw_health_bar(player_number, position, bar_color):
-        arcade.draw_rectangle_filled(center_x = position,
-                                center_y=20+40 + HEALTHBAR_OFFSET_Y,
-                                width=HEALTHBAR_WIDTH,
-                                height=HEALTHBAR_HEIGHT,
-                                color=bar_color
-                )
-
-        arcade.draw_text(f"PLAYER {player_number + 1}",
-                                start_x = position + HEALTH_NUMBER_OFFSET_X,
-                                start_y = 20+65 + HEALTH_NUMBER_OFFSET_Y,
-                                font_size=14,
-                                color=arcade.color.WHITE
-                )
-
     def draw_healthbars(self):
 
-        for index, player in enumerate(self.players_list):
-            
-            position = (index * SCREEN_WIDTH/5) + SCREEN_WIDTH/5
-            r = 255 * (player.max_health - player.curr_health) / player.max_health
-            g = 255 * 2 * player.curr_health / player.max_health if player.curr_health < player.max_health/2 else 255
-            b = 20
-            
+        for player in self.players_list:
             if player.player_number == self.player.player_number:
-                self.draw_health_bar(index, position=position, bar_color=(r, g, b))
+                self.player.draw_health_bar()
             elif self.player_is_connected(player):
-                self.draw_health_bar(index, position=position, bar_color=(r, g, b))
+                player.draw_health_bar()
             else:
-                self.draw_health_bar(index, position=position, bar_color=(200, 200, 200, 155))
+                player.draw_disconnected()
 
-        
     def send_to_server(self, msg):
         try:
             message = pickle.dumps(msg)
@@ -245,44 +222,24 @@ class Game(arcade.Window):
 
         try:
             for index, player in enumerate(self.players_list):
-                server_center_x = float(received_list[index]["x"])
-                server_center_y = float(received_list[index]["y"])
-                server_change_x = float(received_list[index]["vx"])
-                server_change_y = float(received_list[index]["vy"])
-                server_state = str(received_list[index]["st"])
-                server_character_selection = int(received_list[index]["c"])
+
+                server_data = {
+                'server_center_x': float(received_list[index]["x"]),
+                'server_center_y': float(received_list[index]["y"]),
+                'server_change_x': float(received_list[index]["vx"]),
+                'server_change_y': float(received_list[index]["vy"]),
+                'server_state': str(received_list[index]["st"]),
+                'server_character_selection': int(received_list[index]["c"]),
+                'prev_state': player.state,
+                'player_number': index,
+                }
+
 
                 player.player_number = index
-                if player.character_selection != server_character_selection:
-                    player.character_selection = server_character_selection
-                    player.load_character_textures()
-
                 if index == self.player.player_number:
-                    if self.player.center_y < -1000:
-                        self.player.center_x = 100
-                        self.player.center_y = 160
-                        player.curr_health = player.max_health
+                    self.player.local_update_with_server_data(server_data)
                 else:
-                    prev_state = player.state
-                    player.state = server_state
-                    if index == self.player.player_number and player.curr_health == player.max_health:
-                        self.player.curr_health = self.player.max_health
-                    elif prev_state == 'death' and player.state == 'idle':
-                        player.curr_health = player.max_health
-                        if index == self.player.player_number:
-                            self.player.curr_health = self.player.max_health
-                    elif prev_state != player.state and (server_state == 'atk_1' or server_state == 'sp_atk' or server_state == 'death'):
-                        player.animation_start = time.time_ns()
-                    elif player.state == "death":
-                        player.curr_health = 0
-
-                    player.center_x = server_center_x
-                    player.center_y = server_center_y
-
-                    player.change_x = server_change_x
-                    player.change_y = server_change_y
-
-                    player.set_hit_box(player.texture.hit_box_points)
+                    player.update_with_server_data(server_data)
                 
                 # Update damage to all players including client based on damage in recieved_data from server.
                 for key, value in received_list.items():
