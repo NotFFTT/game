@@ -2,6 +2,11 @@
 
 Apple Smash is an online multiplayer battle game allowing up to four unique player characters. Apple Smash utilizes the Python Arcade game engine and the server is hosted on Digital Ocean.
 
+
+# Watch the Demo!
+
+Click [here](https://www.youtube.com/watch?v=L9-kgbdOjHE) to view the demo! Please note the time stamps in the description to view introductions, project overview, or the live demo as desired. 
+
 # Resources
 
 - Character sprites: https://chierit.itch.io
